@@ -1,0 +1,13 @@
+/target/
+/.codex/
+/docs/analysis/
+/docs/plan/
+/docs/progress/
+
+*.pdb
+*.ilk
+*.obj
+*.log
+
+.DS_Store
+Thumbs.db

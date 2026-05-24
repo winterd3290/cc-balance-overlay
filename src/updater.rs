@@ -229,58 +229,31 @@ fn launch_update_script(script_path: &Path) -> Result<()> {
 
 #[cfg(windows)]
 fn show_update_prompt(release: &ReleaseInfo) -> UpdatePromptChoice {
-    use std::ptr::null_mut;
     use windows::core::PCWSTR;
-    use windows::Win32::Foundation::HWND;
-    use windows::Win32::UI::Controls::{
-        TaskDialogIndirect, TASKDIALOGCONFIG, TASKDIALOG_BUTTON, TDF_ALLOW_DIALOG_CANCELLATION,
-        TDF_USE_COMMAND_LINKS,
+    use windows::Win32::UI::WindowsAndMessaging::{
+        MessageBoxW, IDCANCEL, IDNO, IDYES, MB_ICONINFORMATION, MB_YESNOCANCEL,
     };
 
-    const BUTTON_AUTO: i32 = 1001;
-    const BUTTON_DISABLE: i32 = 1002;
-
-    let title = wide("CC Balance Overlay");
-    let instruction = wide(&format!("发现新版本 {}", release.tag));
+    let title = wide("CC Balance Overlay 更新");
     let content = wide(&format!(
-        "当前版本是 {}，最新版本是 {}。\n\n请选择后续更新方式：",
+        "发现新版本 {}。\n\n当前版本：{}\n最新版本：{}\n\n选择“是”启用自动更新。\n选择“否”不再提醒。\n选择“取消”下次再说。",
+        release.tag,
         env!("CARGO_PKG_VERSION"),
         release.version
     ));
-    let auto = wide("自动更新\n以后检测到新版本时自动下载并重启应用");
-    let disable = wide("不再提醒\n不再检测新版本，也不再自动更新");
-    let buttons = [
-        TASKDIALOG_BUTTON {
-            nButtonID: BUTTON_AUTO,
-            pszButtonText: PCWSTR(auto.as_ptr()),
-        },
-        TASKDIALOG_BUTTON {
-            nButtonID: BUTTON_DISABLE,
-            pszButtonText: PCWSTR(disable.as_ptr()),
-        },
-    ];
-    let mut selected = 0;
-    let config = TASKDIALOGCONFIG {
-        cbSize: std::mem::size_of::<TASKDIALOGCONFIG>() as u32,
-        hwndParent: HWND(null_mut()),
-        dwFlags: TDF_USE_COMMAND_LINKS | TDF_ALLOW_DIALOG_CANCELLATION,
-        pszWindowTitle: PCWSTR(title.as_ptr()),
-        pszMainInstruction: PCWSTR(instruction.as_ptr()),
-        pszContent: PCWSTR(content.as_ptr()),
-        cButtons: buttons.len() as u32,
-        pButtons: buttons.as_ptr(),
-        nDefaultButton: BUTTON_AUTO,
-        ..Default::default()
+
+    let selected = unsafe {
+        MessageBoxW(
+            None,
+            PCWSTR(content.as_ptr()),
+            PCWSTR(title.as_ptr()),
+            MB_YESNOCANCEL | MB_ICONINFORMATION,
+        )
     };
-
-    let result = unsafe { TaskDialogIndirect(&config, Some(&mut selected), None, None) };
-    if result.is_err() {
-        return UpdatePromptChoice::Later;
-    }
-
     match selected {
-        BUTTON_AUTO => UpdatePromptChoice::Automatic,
-        BUTTON_DISABLE => UpdatePromptChoice::Disable,
+        IDYES => UpdatePromptChoice::Automatic,
+        IDNO => UpdatePromptChoice::Disable,
+        IDCANCEL => UpdatePromptChoice::Later,
         _ => UpdatePromptChoice::Later,
     }
 }

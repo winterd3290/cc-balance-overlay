@@ -1,8 +1,9 @@
 #[cfg(windows)]
 mod win {
-    use anyhow::Result;
     use crate::settings::OverlaySettings;
+    use anyhow::Result;
     use std::ffi::c_void;
+    use std::path::Path;
     use std::ptr::null_mut;
     use windows::core::{w, PCWSTR};
     use windows::Win32::Foundation::{
@@ -10,11 +11,11 @@ mod win {
         RECT, SIZE, WPARAM,
     };
     use windows::Win32::Graphics::Gdi::{
-        BeginPaint, CreateCompatibleDC, CreateDIBSection, CreateFontIndirectW, CreateFontW, CreateRoundRectRgn,
-        CreateSolidBrush, DeleteDC, DeleteObject, DrawTextW, EndPaint, FillRect, FrameRect,
-        GetStockObject, GetTextExtentPoint32W, LineTo, MoveToEx, RedrawWindow, SelectObject,
-        SetBkMode, SetTextColor, SetWindowRgn, AC_SRC_ALPHA,
-        AC_SRC_OVER, ANTIALIASED_QUALITY, BI_RGB, BITMAPINFO, BITMAPINFOHEADER, BLENDFUNCTION,
+        BeginPaint, CreateCompatibleDC, CreateDIBSection, CreateFontIndirectW, CreateFontW,
+        CreateRoundRectRgn, CreateSolidBrush, DeleteDC, DeleteObject, DrawTextW, EndPaint,
+        FillRect, FrameRect, GetStockObject, GetTextExtentPoint32W, LineTo, MoveToEx, RedrawWindow,
+        SelectObject, SetBkMode, SetTextColor, SetWindowRgn, AC_SRC_ALPHA, AC_SRC_OVER,
+        ANTIALIASED_QUALITY, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, BLENDFUNCTION,
         CLIP_DEFAULT_PRECIS, DEFAULT_CHARSET, DEFAULT_PITCH, DIB_RGB_COLORS, DT_LEFT, DT_NOCLIP,
         DT_RIGHT, DT_SINGLELINE, DT_VCENTER, FF_DONTCARE, FW_NORMAL, HBRUSH, OUT_DEFAULT_PRECIS,
         PAINTSTRUCT, RDW_ALLCHILDREN, RDW_ERASE, RDW_INVALIDATE, RDW_UPDATENOW, TRANSPARENT,
@@ -27,7 +28,7 @@ mod win {
         REG_OPTION_NON_VOLATILE, REG_SZ,
     };
     use windows::Win32::UI::Controls::Dialogs::{
-        ChooseColorW, CHOOSECOLORW, CC_FULLOPEN, CC_RGBINIT,
+        ChooseColorW, CC_FULLOPEN, CC_RGBINIT, CHOOSECOLORW,
     };
     use windows::Win32::UI::Controls::{
         CreateUpDownControl, UDS_ALIGNRIGHT, UDS_ARROWKEYS, UDS_SETBUDDYINT,
@@ -35,25 +36,23 @@ mod win {
     use windows::Win32::UI::HiDpi::SetProcessDpiAwarenessContext;
     use windows::Win32::UI::Input::KeyboardAndMouse::VK_ESCAPE;
     use windows::Win32::UI::Shell::{
-        SHAppBarMessage, APPBARDATA, ABM_GETSTATE, ABM_GETTASKBARPOS, ABS_AUTOHIDE,
+        SHAppBarMessage, ABM_GETSTATE, ABM_GETTASKBARPOS, ABS_AUTOHIDE, APPBARDATA,
     };
     use windows::Win32::UI::WindowsAndMessaging::{
-        CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, FindWindowExW,
-        FindWindowW, GetCursorPos, GetMessageW,
-        GetWindowLongPtrW, GetWindowRect, GetWindowTextW, LoadCursorW, MessageBoxW,
-        PostQuitMessage, RegisterClassW, SendMessageW, SetForegroundWindow, SetTimer,
-        SetWindowLongPtrW, SetWindowPos, SetWindowTextW, ShowWindow, TranslateMessage,
-        UpdateLayeredWindow,
-        BM_GETCHECK, BM_SETCHECK, BN_CLICKED, BS_AUTOCHECKBOX, CS_HREDRAW,
-        CS_VREDRAW, CW_USEDEFAULT, EN_CHANGE, ES_AUTOHSCROLL, ES_NUMBER, GWLP_USERDATA, HMENU,
-        HTCLIENT, IDC_ARROW, MSG, SW_SHOW, SW_SHOWNOACTIVATE, SWP_NOACTIVATE, SWP_SHOWWINDOW,
-        ULW_ALPHA, WINDOW_EX_STYLE,
-        WINDOW_STYLE, WM_ACTIVATE, WM_CLOSE, WM_COMMAND, WM_CONTEXTMENU, WM_CREATE,
-        WM_CTLCOLORSTATIC, WM_DESTROY, WM_DISPLAYCHANGE, WM_ERASEBKGND, WM_MOUSEMOVE, WM_NCHITTEST, WM_PAINT,
-        EnumChildWindows, WM_RBUTTONUP, WM_KEYDOWN, WM_LBUTTONUP, WM_SETFONT, WM_SETTINGCHANGE, WM_TIMER, WNDCLASSW, WA_INACTIVE, WS_BORDER, WS_CHILD, WS_EX_LAYERED, WS_EX_NOACTIVATE,
-        WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP, WS_TABSTOP, WS_VISIBLE,
-        NONCLIENTMETRICSW, SPI_GETNONCLIENTMETRICS, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS,
-        SystemParametersInfoW,
+        CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, EnumChildWindows,
+        FindWindowExW, FindWindowW, GetCursorPos, GetMessageW, GetWindowLongPtrW, GetWindowRect,
+        GetWindowTextW, LoadCursorW, MessageBoxW, PostQuitMessage, RegisterClassW, SendMessageW,
+        SetForegroundWindow, SetTimer, SetWindowLongPtrW, SetWindowPos, SetWindowTextW, ShowWindow,
+        SystemParametersInfoW, TranslateMessage, UpdateLayeredWindow, BM_GETCHECK, BM_SETCHECK,
+        BN_CLICKED, BS_AUTOCHECKBOX, CS_HREDRAW, CS_VREDRAW, CW_USEDEFAULT, EN_CHANGE,
+        ES_AUTOHSCROLL, ES_NUMBER, GWLP_USERDATA, HMENU, HTCLIENT, IDC_ARROW, MSG,
+        NONCLIENTMETRICSW, SPI_GETNONCLIENTMETRICS, SWP_NOACTIVATE, SWP_SHOWWINDOW, SW_SHOW,
+        SW_SHOWNOACTIVATE, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS, ULW_ALPHA, WA_INACTIVE,
+        WINDOW_EX_STYLE, WINDOW_STYLE, WM_ACTIVATE, WM_CLOSE, WM_COMMAND, WM_CONTEXTMENU,
+        WM_CREATE, WM_CTLCOLORSTATIC, WM_DESTROY, WM_DISPLAYCHANGE, WM_ERASEBKGND, WM_KEYDOWN,
+        WM_LBUTTONUP, WM_MOUSEMOVE, WM_NCHITTEST, WM_PAINT, WM_RBUTTONUP, WM_SETFONT,
+        WM_SETTINGCHANGE, WM_TIMER, WNDCLASSW, WS_BORDER, WS_CHILD, WS_EX_LAYERED,
+        WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP, WS_TABSTOP, WS_VISIBLE,
     };
 
     const WINDOW_WIDTH: i32 = 92;
@@ -97,6 +96,12 @@ mod win {
         top: 170,
         right: SETTINGS_WIDTH,
         bottom: 206,
+    };
+    const STARTUP_ROW_RECT: RECT = RECT {
+        left: 0,
+        top: 146,
+        right: SETTINGS_WIDTH,
+        bottom: 170,
     };
 
     pub struct OverlayWindow {
@@ -153,10 +158,7 @@ mod win {
             let hwnd = unsafe {
                 CreateWindowExW(
                     WINDOW_EX_STYLE(
-                        WS_EX_TOPMOST.0
-                            | WS_EX_TOOLWINDOW.0
-                            | WS_EX_NOACTIVATE.0
-                            | WS_EX_LAYERED.0,
+                        WS_EX_TOPMOST.0 | WS_EX_TOOLWINDOW.0 | WS_EX_NOACTIVATE.0 | WS_EX_LAYERED.0,
                     ),
                     PCWSTR(class_name.as_ptr()),
                     PCWSTR(wide("CC Balance").as_ptr()),
@@ -276,11 +278,16 @@ mod win {
         }
     }
 
-    extern "system" fn window_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
+    extern "system" fn window_proc(
+        hwnd: HWND,
+        msg: u32,
+        wparam: WPARAM,
+        lparam: LPARAM,
+    ) -> LRESULT {
         unsafe {
             if msg == WM_CREATE {
-                let createstruct = lparam.0
-                    as *const windows::Win32::UI::WindowsAndMessaging::CREATESTRUCTW;
+                let createstruct =
+                    lparam.0 as *const windows::Win32::UI::WindowsAndMessaging::CREATESTRUCTW;
                 if !createstruct.is_null() {
                     SetWindowLongPtrW(hwnd, GWLP_USERDATA, (*createstruct).lpCreateParams as isize);
                 }
@@ -359,7 +366,10 @@ mod win {
 
         unsafe fn hide_tooltip(&self) {
             if !self.tooltip_hwnd.is_invalid() {
-                let _ = ShowWindow(self.tooltip_hwnd, windows::Win32::UI::WindowsAndMessaging::SW_HIDE);
+                let _ = ShowWindow(
+                    self.tooltip_hwnd,
+                    windows::Win32::UI::WindowsAndMessaging::SW_HIDE,
+                );
             }
         }
 
@@ -436,9 +446,15 @@ mod win {
             let mut cursor = POINT::default();
             let mut owner_rect = RECT::default();
             let (x, y) = if GetCursorPos(&mut cursor).is_ok() {
-                (cursor.x - SETTINGS_WIDTH + 10, (cursor.y - SETTINGS_HEIGHT - 6).max(0))
+                (
+                    cursor.x - SETTINGS_WIDTH + 10,
+                    (cursor.y - SETTINGS_HEIGHT - 6).max(0),
+                )
             } else if GetWindowRect(self.hwnd, &mut owner_rect).is_ok() {
-                (owner_rect.right - SETTINGS_WIDTH, owner_rect.top - SETTINGS_HEIGHT - 8)
+                (
+                    owner_rect.right - SETTINGS_WIDTH,
+                    owner_rect.top - SETTINGS_HEIGHT - 8,
+                )
             } else {
                 (CW_USEDEFAULT, CW_USEDEFAULT)
             };
@@ -480,9 +496,21 @@ mod win {
                 return;
             }
             self.suppress_settings_events = true;
-            set_control_text(self.settings_hwnd, IDC_FONT_SIZE, &self.settings.font_size.to_string());
-            set_control_text(self.settings_hwnd, IDC_CLAUDE_PREFIX, &self.settings.claude_prefix);
-            set_control_text(self.settings_hwnd, IDC_CODEX_PREFIX, &self.settings.codex_prefix);
+            set_control_text(
+                self.settings_hwnd,
+                IDC_FONT_SIZE,
+                &self.settings.font_size.to_string(),
+            );
+            set_control_text(
+                self.settings_hwnd,
+                IDC_CLAUDE_PREFIX,
+                &self.settings.claude_prefix,
+            );
+            set_control_text(
+                self.settings_hwnd,
+                IDC_CODEX_PREFIX,
+                &self.settings.codex_prefix,
+            );
             set_checkbox_checked(self.settings_hwnd, IDC_STARTUP, startup_enabled());
             self.suppress_settings_events = false;
         }
@@ -526,17 +554,7 @@ mod win {
                 }
                 IDC_STARTUP if notify_code == BN_CLICKED => {
                     let enabled = is_checkbox_checked(self.settings_hwnd, IDC_STARTUP);
-                    if let Err(err) = set_startup_enabled(enabled) {
-                        set_checkbox_checked(self.settings_hwnd, IDC_STARTUP, !enabled);
-                        let text = wide(&format!("设置开机启动失败：{err}"));
-                        let caption = wide("CC Balance");
-                        let _ = MessageBoxW(
-                            self.settings_hwnd,
-                            PCWSTR(text.as_ptr()),
-                            PCWSTR(caption.as_ptr()),
-                            Default::default(),
-                        );
-                    }
+                    self.apply_startup_enabled(enabled);
                 }
                 IDC_EXIT if notify_code == BN_CLICKED => {
                     PostQuitMessage(0);
@@ -561,6 +579,22 @@ mod win {
             }
             self.color_dialog_open = false;
         }
+
+        unsafe fn apply_startup_enabled(&mut self, enabled: bool) {
+            if let Err(err) = set_startup_enabled(enabled) {
+                set_checkbox_checked(self.settings_hwnd, IDC_STARTUP, startup_enabled());
+                let text = wide(&format!("设置开机启动失败：{err}"));
+                let caption = wide("CC Balance");
+                let _ = MessageBoxW(
+                    self.settings_hwnd,
+                    PCWSTR(text.as_ptr()),
+                    PCWSTR(caption.as_ptr()),
+                    Default::default(),
+                );
+            } else {
+                set_checkbox_checked(self.settings_hwnd, IDC_STARTUP, startup_enabled());
+            }
+        }
     }
 
     extern "system" fn settings_proc(
@@ -571,8 +605,8 @@ mod win {
     ) -> LRESULT {
         unsafe {
             if msg == WM_CREATE {
-                let createstruct = lparam.0
-                    as *const windows::Win32::UI::WindowsAndMessaging::CREATESTRUCTW;
+                let createstruct =
+                    lparam.0 as *const windows::Win32::UI::WindowsAndMessaging::CREATESTRUCTW;
                 if !createstruct.is_null() {
                     SetWindowLongPtrW(hwnd, GWLP_USERDATA, (*createstruct).lpCreateParams as isize);
                     create_settings_controls(hwnd);
@@ -634,6 +668,12 @@ mod win {
                     let y = hiword(lparam.0 as usize) as i32;
                     if !ptr.is_null() && point_in_rect(x, y, &COLOR_ROW_RECT) {
                         (*ptr).open_color_dialog();
+                        return LRESULT(0);
+                    }
+                    if !ptr.is_null() && point_in_rect(x, y, &STARTUP_ROW_RECT) {
+                        let enabled = !is_checkbox_checked((*ptr).settings_hwnd, IDC_STARTUP);
+                        set_checkbox_checked((*ptr).settings_hwnd, IDC_STARTUP, enabled);
+                        (*ptr).apply_startup_enabled(enabled);
                         return LRESULT(0);
                     }
                     if point_in_rect(x, y, &EXIT_ROW_RECT) {
@@ -926,7 +966,8 @@ mod win {
             LPARAM(font.0 as isize),
         );
         let larger_font = system_ui_font_delta(-2);
-        if let Ok(control) = windows::Win32::UI::WindowsAndMessaging::GetDlgItem(hwnd, IDC_FONT_SIZE)
+        if let Ok(control) =
+            windows::Win32::UI::WindowsAndMessaging::GetDlgItem(hwnd, IDC_FONT_SIZE)
         {
             set_control_font(control, larger_font);
         }
@@ -1042,7 +1083,12 @@ mod win {
         SelectObject(hdc, old);
     }
 
-    extern "system" fn tooltip_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
+    extern "system" fn tooltip_proc(
+        hwnd: HWND,
+        msg: u32,
+        wparam: WPARAM,
+        lparam: LPARAM,
+    ) -> LRESULT {
         unsafe {
             match msg {
                 WM_PAINT => {
@@ -1144,8 +1190,10 @@ mod win {
         }
 
         let old_bitmap = SelectObject(hdc, bitmap);
-        let pixels =
-            std::slice::from_raw_parts_mut(bits as *mut u8, (WINDOW_WIDTH * WINDOW_HEIGHT * 4) as usize);
+        let pixels = std::slice::from_raw_parts_mut(
+            bits as *mut u8,
+            (WINDOW_WIDTH * WINDOW_HEIGHT * 4) as usize,
+        );
         pixels.fill(0);
         for pixel in pixels.chunks_exact_mut(4) {
             pixel[3] = 1;
@@ -1298,20 +1346,48 @@ mod win {
     }
 
     fn startup_enabled() -> bool {
-        unsafe { startup_value().is_some() }
+        let Ok(exe) = std::env::current_exe() else {
+            return false;
+        };
+        let expected = startup_command_for_exe(&exe);
+        unsafe { startup_value().as_deref() == Some(expected.as_str()) }
     }
 
     fn set_startup_enabled(enabled: bool) -> Result<()> {
         unsafe {
             if enabled {
                 let exe = std::env::current_exe()?;
-                let command = format!("\"{}\"", exe.display());
+                let command = startup_command_for_exe(&exe);
                 set_startup_value(&command)?;
+                let saved = startup_value().unwrap_or_default();
+                if saved != command {
+                    anyhow::bail!(
+                        "startup value was not persisted correctly: expected `{command}`, got `{saved}`"
+                    );
+                }
             } else {
                 delete_startup_value()?;
+                if startup_value().is_some() {
+                    anyhow::bail!("startup value still exists after deletion");
+                }
             }
         }
         Ok(())
+    }
+
+    fn startup_command_for_exe(exe: &Path) -> String {
+        format!("\"{}\"", normalize_startup_path(exe))
+    }
+
+    fn normalize_startup_path(exe: &Path) -> String {
+        let raw = exe.to_string_lossy();
+        if let Some(path) = raw.strip_prefix(r"\\?\UNC\") {
+            format!(r"\\{path}")
+        } else if let Some(path) = raw.strip_prefix(r"\\?\") {
+            path.to_string()
+        } else {
+            raw.into_owned()
+        }
     }
 
     unsafe fn startup_value() -> Option<String> {
@@ -1376,7 +1452,9 @@ mod win {
         Ok(())
     }
 
-    unsafe fn open_run_key(access: windows::Win32::System::Registry::REG_SAM_FLAGS) -> Result<HKEY> {
+    unsafe fn open_run_key(
+        access: windows::Win32::System::Registry::REG_SAM_FLAGS,
+    ) -> Result<HKEY> {
         let mut key = HKEY::default();
         let subkey = wide(RUN_KEY);
         let result = RegOpenKeyExW(
@@ -1401,7 +1479,7 @@ mod win {
             0,
             PCWSTR::null(),
             REG_OPTION_NON_VOLATILE,
-            KEY_SET_VALUE,
+            KEY_SET_VALUE | KEY_QUERY_VALUE,
             None,
             &mut key,
             None,
@@ -1530,8 +1608,28 @@ mod win {
             assert_eq!(premultiply_channel(64, 128), 32);
             assert_eq!(premultiply_channel(0, 200), 0);
         }
-    }
 
+        #[test]
+        fn startup_command_normalizes_extended_length_paths() {
+            let normal = std::path::Path::new(r"C:\Tools\cc-balance-overlay.exe");
+            assert_eq!(
+                startup_command_for_exe(normal),
+                r#""C:\Tools\cc-balance-overlay.exe""#
+            );
+
+            let extended = std::path::Path::new(r"\\?\C:\Tools\cc-balance-overlay.exe");
+            assert_eq!(
+                startup_command_for_exe(extended),
+                r#""C:\Tools\cc-balance-overlay.exe""#
+            );
+
+            let unc = std::path::Path::new(r"\\?\UNC\server\share\cc-balance-overlay.exe");
+            assert_eq!(
+                startup_command_for_exe(unc),
+                r#""\\server\share\cc-balance-overlay.exe""#
+            );
+        }
+    }
 }
 
 #[cfg(windows)]

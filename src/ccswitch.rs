@@ -195,7 +195,10 @@ mod tests {
             settings.current_provider_for(AppKind::Claude),
             Some("claude-a")
         );
-        assert_eq!(settings.current_provider_for(AppKind::Codex), Some("codex-b"));
+        assert_eq!(
+            settings.current_provider_for(AppKind::Codex),
+            Some("codex-b")
+        );
     }
 
     #[test]

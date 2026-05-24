@@ -46,9 +46,10 @@ CC Balance Overlay turns that hidden state into something glanceable. It is inte
 
 1. Install and configure CC Switch.
 2. Make sure your Claude and Codex providers in CC Switch include usable `usage_script` balance metadata.
-3. Download `cc-balance-overlay.exe` from the [latest release](https://github.com/wgd-12138/cc-balance-overlay/releases/latest).
-4. Run `cc-balance-overlay.exe`.
-5. Look near the Windows tray area. You should see two compact balance lines:
+3. Download `cc-balance-overlay-v0.1.1-windows-x64.zip` from the [latest release](https://github.com/wgd-12138/cc-balance-overlay/releases/latest).
+4. Extract the zip to a stable folder, for example `C:\Tools\cc-balance-overlay`.
+5. Run `cc-balance-overlay.exe`.
+6. Look near the Windows tray area. You should see two compact balance lines:
 
 ```text
 C $17.7
@@ -101,6 +102,8 @@ Change the active Claude or Codex provider in CC Switch as usual. CC Balance Ove
 ### Start With Windows
 
 Right-click the overlay and enable **Start with Windows**. The app writes a normal current-user startup entry and can be disabled from the same settings panel.
+
+Keep the executable in the same folder after enabling startup. If you move the app, open the settings panel, turn **Start with Windows** off, then turn it on again so Windows stores the new path.
 
 ### Exit The App
 

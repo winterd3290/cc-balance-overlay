@@ -112,7 +112,12 @@ impl BalanceApp {
     fn fallback_text(&self) -> String {
         let mut lines = Vec::new();
         for app in [AppKind::Claude, AppKind::Codex] {
-            lines.push(format_line(app, "", self.last_known.get(&app), &self.settings));
+            lines.push(format_line(
+                app,
+                "",
+                self.last_known.get(&app),
+                &self.settings,
+            ));
         }
         format_overlay_text(&lines)
     }

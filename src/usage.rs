@@ -134,7 +134,10 @@ pub fn query_balance(script: &UsageScript) -> Result<BalanceSnapshot> {
 pub fn extract_balance(value: &Value) -> BalanceSnapshot {
     let data = value.get("data").unwrap_or(value);
     let remaining = first_number(data, &["remaining", "balance", "quota_remaining"])
-        .or_else(|| data.get("quota").and_then(|q| first_number(q, &["remaining", "balance"])))
+        .or_else(|| {
+            data.get("quota")
+                .and_then(|q| first_number(q, &["remaining", "balance"]))
+        })
         .or_else(|| first_number(data, &["quota"]).map(normalize_quota));
     let unit = first_string(data, &["unit", "currency"])
         .or_else(|| {
@@ -238,7 +241,8 @@ mod tests {
     fn extracts_remaining_from_common_response_shapes() {
         let direct = extract_balance(&json!({"remaining": "12.5", "unit": "CNY"}));
         let nested = extract_balance(&json!({"quota": {"remaining": 7.0, "unit": "USD"}}));
-        let normalized = extract_balance(&json!({"data": {"quota": 8_863_627, "used_quota": 77_136_373}}));
+        let normalized =
+            extract_balance(&json!({"data": {"quota": 8_863_627, "used_quota": 77_136_373}}));
 
         assert_eq!(direct.remaining, Some(12.5));
         assert_eq!(direct.unit, "CNY");

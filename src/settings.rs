@@ -9,6 +9,15 @@ pub struct OverlaySettings {
     pub color: String,
     pub claude_prefix: String,
     pub codex_prefix: String,
+    pub update_policy: UpdatePolicy,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum UpdatePolicy {
+    Prompt,
+    Automatic,
+    Disabled,
 }
 
 impl Default for OverlaySettings {
@@ -18,6 +27,7 @@ impl Default for OverlaySettings {
             color: "#FFFFFF".to_string(),
             claude_prefix: "C".to_string(),
             codex_prefix: "X".to_string(),
+            update_policy: UpdatePolicy::Prompt,
         }
     }
 }

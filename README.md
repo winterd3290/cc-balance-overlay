@@ -39,6 +39,7 @@ CC Balance Overlay turns that hidden state into something glanceable. It is inte
 - **Clock-like layout**: low-distraction presentation inspired by the native Windows time/date block.
 - **Provider tooltip**: hover to see the current Claude and Codex provider names.
 - **Right-click settings**: font size, text color, Claude prefix, Codex prefix, startup toggle, and quit.
+- **Startup update check**: checks the latest GitHub Release on launch and stays silent when there is no update.
 - **Local-first**: settings stay on your machine.
 - **Native Rust + Win32**: lightweight app with no console window on launch.
 
@@ -105,6 +106,17 @@ Right-click the overlay and enable **Start with Windows**. The app writes a norm
 
 Keep the executable in the same folder after enabling startup. If you move the app, open the settings panel, turn **Start with Windows** off, then turn it on again so Windows stores the new path.
 
+### Update Behavior
+
+On startup, the app checks the latest GitHub Release in the background.
+
+- If there is no newer version, nothing is shown.
+- If a newer version exists, a small prompt appears.
+- Choose **Automatic update** to save that preference. Future versions will be downloaded and applied silently.
+- Choose **Do not remind me again** to stop checking for updates and disable automatic updates.
+
+You can reset this behavior by editing `%APPDATA%\cc-balance-overlay\settings.toml` and setting `update_policy = "prompt"`.
+
 ### Exit The App
 
 Right-click the overlay and choose **Quit**.
@@ -150,6 +162,7 @@ font_size = 13
 color = "#FFFFFF"
 claude_prefix = "C"
 codex_prefix = "X"
+update_policy = "prompt"
 ```
 
 Most users should use the right-click settings panel instead of editing this file manually.

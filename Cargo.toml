@@ -1,6 +1,6 @@
 [package]
 name = "cc-balance-overlay"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 description = "Windows overlay that shows current CC Switch Claude and Codex balances near the taskbar tray."
 license = "MIT"
@@ -21,6 +21,7 @@ url = "2"
 windows = { version = "0.58", features = [
     "Win32_Foundation",
     "Win32_Graphics_Gdi",
+    "Win32_System_Threading",
     "Win32_UI_Controls",
     "Win32_UI_Controls_Dialogs",
     "Win32_UI_WindowsAndMessaging",

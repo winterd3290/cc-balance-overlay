@@ -4,12 +4,14 @@ use anyhow::Result;
 use cc_balance_overlay::app::{AppConfig, BalanceApp};
 use cc_balance_overlay::overlay::OverlayWindow;
 use cc_balance_overlay::settings::OverlaySettings;
+use cc_balance_overlay::updater::check_for_updates_on_startup;
 
 fn main() -> Result<()> {
     let config = AppConfig::discover()?;
     let settings = OverlaySettings::load();
     let mut app = BalanceApp::new(config, settings.clone());
     let mut overlay = OverlayWindow::new(settings)?;
+    check_for_updates_on_startup();
     let initial = app.refresh();
     overlay.set_text(initial.text);
     overlay.set_tooltip(initial.tooltip);

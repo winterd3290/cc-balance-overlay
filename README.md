@@ -6,8 +6,9 @@
 
 <p align="center">
   <a href="README.zh-CN.md">简体中文</a> ·
-  <a href="https://github.com/wgd-12138/cc-balance-overlay/releases">Releases</a> ·
-  <a href="#build-from-source">Build from source</a>
+  <a href="https://github.com/wgd-12138/cc-balance-overlay/releases/latest">Download</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#usage-guide">Usage guide</a>
 </p>
 
 <p align="center">
@@ -41,11 +42,69 @@ CC Balance Overlay turns that hidden state into something glanceable. It is inte
 - **Local-first**: settings stay on your machine.
 - **Native Rust + Win32**: lightweight app with no console window on launch.
 
-## Install
+## Quick Start
 
-Download `cc-balance-overlay.exe` from [Releases](https://github.com/wgd-12138/cc-balance-overlay/releases) once a release is published.
+1. Install and configure CC Switch.
+2. Make sure your Claude and Codex providers in CC Switch include usable `usage_script` balance metadata.
+3. Download `cc-balance-overlay.exe` from the [latest release](https://github.com/wgd-12138/cc-balance-overlay/releases/latest).
+4. Run `cc-balance-overlay.exe`.
+5. Look near the Windows tray area. You should see two compact balance lines:
 
-Until then, build from source.
+```text
+C $17.7
+X $88.0
+```
+
+The default prefixes are:
+
+- `C`: Claude
+- `X`: Codex
+
+You can change both prefixes from the right-click settings panel.
+
+## Usage Guide
+
+### Read The Overlay
+
+The overlay shows one line per app:
+
+```text
+C $17.7
+X $88.0
+```
+
+If a balance cannot be loaded yet, the app shows `--` for that line and keeps running. When a previous successful value exists, it can keep displaying the last known value while the next refresh is pending.
+
+### Hover For Provider Names
+
+Move your mouse over the overlay to see which CC Switch providers are currently active for Claude and Codex. This is useful when you switch providers often and want to confirm which relay is being charged.
+
+### Open Settings
+
+Right-click the overlay to open the settings panel.
+
+Available settings:
+
+- **Font size**: adjust the overlay text size.
+- **Text color**: choose a custom display color.
+- **Claude prefix**: customize the label used for Claude.
+- **Codex prefix**: customize the label used for Codex.
+- **Start with Windows**: enable or disable startup at login.
+- **Quit**: close the app.
+
+Most changes apply immediately.
+
+### Switch Providers
+
+Change the active Claude or Codex provider in CC Switch as usual. CC Balance Overlay reads CC Switch state and follows the currently selected providers, so you do not need to configure provider names manually in this app.
+
+### Start With Windows
+
+Right-click the overlay and enable **Start with Windows**. The app writes a normal current-user startup entry and can be disabled from the same settings panel.
+
+### Exit The App
+
+Right-click the overlay and choose **Quit**.
 
 ## Build From Source
 
@@ -90,7 +149,7 @@ claude_prefix = "C"
 codex_prefix = "X"
 ```
 
-Most settings can be changed immediately from the right-click settings panel.
+Most users should use the right-click settings panel instead of editing this file manually.
 
 ## How It Works
 
@@ -106,6 +165,29 @@ It uses:
 - `usage_script` metadata from the provider table
 
 Then it calls the configured provider balance endpoint and renders the result as a compact taskbar-side overlay.
+
+## Troubleshooting
+
+### The Overlay Shows `--`
+
+Check that:
+
+- CC Switch is installed and has selected Claude / Codex providers.
+- The selected provider has enabled `usage_script` metadata.
+- The provider balance endpoint is reachable.
+- Your provider key or token is still valid.
+
+### The Balance Looks Wrong
+
+Different relay providers may expose different balance response shapes. Please open an issue with the provider type and a redacted response example. Do not include real keys or tokens.
+
+### Windows Blocks The App
+
+The project is open source but the executable is not code-signed yet. Windows SmartScreen may warn on first launch. You can build from source if you prefer.
+
+### I Cannot See The Overlay
+
+Try right-clicking near the tray area, checking whether the app process is running, and restarting the app. Multi-monitor, DPI, and unusual taskbar layouts may need additional compatibility work.
 
 ## Privacy & Security
 
@@ -124,9 +206,8 @@ Then it calls the configured provider balance endpoint and renders the result as
 
 ## Roadmap
 
-- Publish the first GitHub Release
 - Add real taskbar screenshots and a demo GIF
-- Provide an installer or portable zip package
+- Provide an installer
 - Improve multi-monitor, DPI, and taskbar-position handling
 - Add more provider balance adapter rules
 - Improve text rendering fidelity against the native Windows clock

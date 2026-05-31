@@ -13,13 +13,12 @@ mod win {
     use windows::Win32::Graphics::Gdi::{
         BeginPaint, CreateCompatibleDC, CreateDIBSection, CreateFontIndirectW, CreateFontW,
         CreateRoundRectRgn, CreateSolidBrush, DeleteDC, DeleteObject, DrawTextW, EndPaint,
-        FillRect, FrameRect, GetStockObject, GetTextExtentPoint32W, LineTo, MoveToEx, RedrawWindow,
-        SelectObject, SetBkMode, SetTextColor, SetWindowRgn, AC_SRC_ALPHA, AC_SRC_OVER,
-        ANTIALIASED_QUALITY, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, BLENDFUNCTION,
+        FillRect, FrameRect, GetTextExtentPoint32W, GetTextMetricsW, LineTo, MoveToEx,
+        RedrawWindow, SelectObject, SetBkMode, SetTextColor, SetWindowRgn, AC_SRC_ALPHA,
+        AC_SRC_OVER, ANTIALIASED_QUALITY, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, BLENDFUNCTION,
         CLIP_DEFAULT_PRECIS, DEFAULT_CHARSET, DEFAULT_PITCH, DIB_RGB_COLORS, DT_LEFT, DT_NOCLIP,
-        DT_RIGHT, DT_SINGLELINE, DT_VCENTER, FF_DONTCARE, FW_NORMAL, HBRUSH, OUT_DEFAULT_PRECIS,
-        PAINTSTRUCT, RDW_ALLCHILDREN, RDW_ERASE, RDW_INVALIDATE, RDW_UPDATENOW, TRANSPARENT,
-        WHITE_BRUSH,
+        DT_SINGLELINE, DT_VCENTER, FF_DONTCARE, FW_NORMAL, HBRUSH, OUT_DEFAULT_PRECIS, PAINTSTRUCT,
+        RDW_ALLCHILDREN, RDW_ERASE, RDW_INVALIDATE, RDW_UPDATENOW, TEXTMETRICW, TRANSPARENT,
     };
     use windows::Win32::System::LibraryLoader::GetModuleHandleW;
     use windows::Win32::System::Registry::{
@@ -30,79 +29,87 @@ mod win {
     use windows::Win32::UI::Controls::Dialogs::{
         ChooseColorW, CC_FULLOPEN, CC_RGBINIT, CHOOSECOLORW,
     };
-    use windows::Win32::UI::Controls::{
-        CreateUpDownControl, UDS_ALIGNRIGHT, UDS_ARROWKEYS, UDS_SETBUDDYINT,
-    };
     use windows::Win32::UI::HiDpi::SetProcessDpiAwarenessContext;
     use windows::Win32::UI::Input::KeyboardAndMouse::VK_ESCAPE;
-    use windows::Win32::UI::Shell::{
-        SHAppBarMessage, ABM_GETSTATE, ABM_GETTASKBARPOS, ABS_AUTOHIDE, APPBARDATA,
-    };
+    use windows::Win32::UI::Shell::{SHAppBarMessage, ABM_GETTASKBARPOS, APPBARDATA};
     use windows::Win32::UI::WindowsAndMessaging::{
         CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, EnumChildWindows,
         FindWindowExW, FindWindowW, GetCursorPos, GetMessageW, GetWindowLongPtrW, GetWindowRect,
         GetWindowTextW, LoadCursorW, MessageBoxW, PostQuitMessage, RegisterClassW, SendMessageW,
         SetForegroundWindow, SetTimer, SetWindowLongPtrW, SetWindowPos, SetWindowTextW, ShowWindow,
-        SystemParametersInfoW, TranslateMessage, UpdateLayeredWindow, BM_GETCHECK, BM_SETCHECK,
-        BN_CLICKED, BS_AUTOCHECKBOX, CS_HREDRAW, CS_VREDRAW, CW_USEDEFAULT, EN_CHANGE,
-        ES_AUTOHSCROLL, ES_NUMBER, GWLP_USERDATA, HMENU, HTCLIENT, IDC_ARROW, MSG,
-        NONCLIENTMETRICSW, SPI_GETNONCLIENTMETRICS, SWP_NOACTIVATE, SWP_SHOWWINDOW, SW_SHOW,
-        SW_SHOWNOACTIVATE, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS, ULW_ALPHA, WA_INACTIVE,
-        WINDOW_EX_STYLE, WINDOW_STYLE, WM_ACTIVATE, WM_CLOSE, WM_COMMAND, WM_CONTEXTMENU,
-        WM_CREATE, WM_CTLCOLORSTATIC, WM_DESTROY, WM_DISPLAYCHANGE, WM_ERASEBKGND, WM_KEYDOWN,
-        WM_LBUTTONUP, WM_MOUSEMOVE, WM_NCHITTEST, WM_PAINT, WM_RBUTTONUP, WM_SETFONT,
-        WM_SETTINGCHANGE, WM_TIMER, WNDCLASSW, WS_BORDER, WS_CHILD, WS_EX_LAYERED,
-        WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP, WS_TABSTOP, WS_VISIBLE,
+        SystemParametersInfoW, TranslateMessage, UpdateLayeredWindow, BN_CLICKED, CS_HREDRAW,
+        CS_VREDRAW, CW_USEDEFAULT, EN_CHANGE, ES_AUTOHSCROLL, ES_NUMBER, GWLP_USERDATA, HMENU,
+        HTCLIENT, IDC_ARROW, MSG, NONCLIENTMETRICSW, SPI_GETNONCLIENTMETRICS, SWP_NOACTIVATE,
+        SWP_SHOWWINDOW, SW_SHOW, SW_SHOWNOACTIVATE, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS, ULW_ALPHA,
+        WA_INACTIVE, WINDOW_EX_STYLE, WINDOW_STYLE, WM_ACTIVATE, WM_CLOSE, WM_COMMAND,
+        WM_CONTEXTMENU, WM_CREATE, WM_CTLCOLOREDIT, WM_CTLCOLORSTATIC, WM_DESTROY,
+        WM_DISPLAYCHANGE, WM_ERASEBKGND, WM_KEYDOWN, WM_LBUTTONUP, WM_MOUSEMOVE, WM_NCHITTEST,
+        WM_PAINT, WM_RBUTTONUP, WM_SETFONT, WM_SETTINGCHANGE, WM_TIMER, WNDCLASSW, WS_BORDER,
+        WS_CHILD, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP,
+        WS_TABSTOP, WS_VISIBLE,
     };
 
     const WINDOW_WIDTH: i32 = 92;
     const WINDOW_HEIGHT: i32 = 42;
     const TIMER_REPOSITION: usize = 2;
-    const LINE_HEIGHT: i32 = 18;
-    const FIRST_LINE_TOP: i32 = 4;
-    const LABEL_LEFT: i32 = 1;
+    const OVERLAY_PADDING_X: i32 = 3;
+    const OVERLAY_PADDING_Y: i32 = 3;
+    const LABEL_LEFT: i32 = OVERLAY_PADDING_X;
     const PREFIX_VALUE_GAP: i32 = 4;
-    const VALUE_RIGHT: i32 = WINDOW_WIDTH - 2;
+    const TRAY_GAP: i32 = 2;
     const MENU_SETTINGS: usize = 101;
     const TIMER_TOOLTIP: usize = 3;
-    const TOOLTIP_WIDTH: i32 = 220;
-    const TOOLTIP_HEIGHT: i32 = 54;
-    const SETTINGS_WIDTH: i32 = 216;
-    const SETTINGS_HEIGHT: i32 = 214;
+    const TOOLTIP_WIDTH: i32 = 260;
+    const TOOLTIP_HEIGHT: i32 = 80;
+    const SETTINGS_WIDTH_BASE: i32 = 304;
+    const SETTINGS_ROW_HEIGHT: i32 = 40;
+    const SETTINGS_HEIGHT_BASE: i32 = SETTINGS_ROW_HEIGHT * 6;
+    const SETTINGS_LABEL_LEFT: i32 = 20;
+    const SETTINGS_VALUE_LEFT: i32 = 178;
+    const SETTINGS_VALUE_RIGHT: i32 = 270;
+    const SETTINGS_CONTROL_HEIGHT: i32 = 26;
     const IDC_FONT_SIZE: i32 = 1001;
-    const IDC_COLOR_BUTTON: i32 = 1002;
     const IDC_CLAUDE_PREFIX: i32 = 1003;
     const IDC_CODEX_PREFIX: i32 = 1004;
     const IDC_EXIT: i32 = 1006;
-    const IDC_STARTUP: i32 = 1007;
     const FONT_MIN: i32 = 8;
     const FONT_MAX: i32 = 32;
     const STARTUP_VALUE_NAME: &str = "CcBalanceOverlay";
     const RUN_KEY: &str = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
     const COLOR_SWATCH_RECT: RECT = RECT {
-        left: 124,
-        top: 55,
-        right: 158,
-        bottom: 73,
+        left: SETTINGS_VALUE_LEFT,
+        top: SETTINGS_ROW_HEIGHT + 11,
+        right: SETTINGS_VALUE_LEFT + 48,
+        bottom: SETTINGS_ROW_HEIGHT + 29,
     };
     const COLOR_ROW_RECT: RECT = RECT {
         left: 0,
-        top: 46,
-        right: SETTINGS_WIDTH,
-        bottom: 82,
+        top: SETTINGS_ROW_HEIGHT,
+        right: SETTINGS_WIDTH_BASE,
+        bottom: SETTINGS_ROW_HEIGHT * 2,
     };
     const EXIT_ROW_RECT: RECT = RECT {
         left: 0,
-        top: 170,
-        right: SETTINGS_WIDTH,
-        bottom: 206,
+        top: SETTINGS_ROW_HEIGHT * 5,
+        right: SETTINGS_WIDTH_BASE,
+        bottom: SETTINGS_ROW_HEIGHT * 6,
     };
     const STARTUP_ROW_RECT: RECT = RECT {
         left: 0,
-        top: 146,
-        right: SETTINGS_WIDTH,
-        bottom: 170,
+        top: SETTINGS_ROW_HEIGHT * 4,
+        right: SETTINGS_WIDTH_BASE,
+        bottom: SETTINGS_ROW_HEIGHT * 5,
     };
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    struct OverlayLayout {
+        width: i32,
+        height: i32,
+        line_height: i32,
+        first_line_top: i32,
+        value_left: i32,
+        value_right: i32,
+    }
 
     pub struct OverlayWindow {
         hwnd: HWND,
@@ -249,21 +256,17 @@ mod win {
 
         fn reposition(&self) {
             if let Some(rect) = taskbar_rect() {
-                let auto_hide = taskbar_auto_hide();
-                let padding = if auto_hide { 4 } else { 10 };
-                let anchor_left = tray_notify_rect()
-                    .map(|tray| tray.left)
-                    .unwrap_or(rect.right - 590);
-                let x = anchor_left - WINDOW_WIDTH - 2;
-                let y = rect.bottom - WINDOW_HEIGHT - padding;
+                let tray_rect = tray_notify_rect();
+                let window_rect = current_window_rect(self.hwnd);
+                let (x, y) = overlay_position(rect, tray_rect, window_rect);
                 unsafe {
                     let _ = SetWindowPos(
                         self.hwnd,
                         HWND(-1isize as *mut c_void),
                         x,
                         y,
-                        WINDOW_WIDTH,
-                        WINDOW_HEIGHT,
+                        window_rect.right - window_rect.left,
+                        window_rect.bottom - window_rect.top,
                         SWP_NOACTIVATE | SWP_SHOWWINDOW,
                     );
                 }
@@ -276,6 +279,19 @@ mod win {
                 render_layered_text(self.hwnd, &self.text, &self.settings);
             }
         }
+    }
+
+    fn current_window_rect(hwnd: HWND) -> RECT {
+        let mut rect = RECT {
+            left: 0,
+            top: 0,
+            right: WINDOW_WIDTH,
+            bottom: WINDOW_HEIGHT,
+        };
+        unsafe {
+            let _ = GetWindowRect(hwnd, &mut rect);
+        }
+        rect
     }
 
     extern "system" fn window_proc(
@@ -351,15 +367,17 @@ mod win {
             if GetWindowRect(self.hwnd, &mut rect).is_err() {
                 return;
             }
-            let x = rect.right - TOOLTIP_WIDTH;
-            let y = rect.top - TOOLTIP_HEIGHT - 6;
+            let width = TOOLTIP_WIDTH;
+            let height = TOOLTIP_HEIGHT;
+            let x = rect.right - width;
+            let y = rect.top - height - 6;
             let _ = SetWindowPos(
                 self.tooltip_hwnd,
                 HWND(-1isize as *mut c_void),
                 x,
                 y,
-                TOOLTIP_WIDTH,
-                TOOLTIP_HEIGHT,
+                width,
+                height,
                 SWP_NOACTIVATE | SWP_SHOWWINDOW,
             );
         }
@@ -443,18 +461,13 @@ mod win {
             };
             RegisterClassW(&wc);
 
-            let mut cursor = POINT::default();
             let mut owner_rect = RECT::default();
-            let (x, y) = if GetCursorPos(&mut cursor).is_ok() {
-                (
-                    cursor.x - SETTINGS_WIDTH + 10,
-                    (cursor.y - SETTINGS_HEIGHT - 6).max(0),
-                )
-            } else if GetWindowRect(self.hwnd, &mut owner_rect).is_ok() {
-                (
-                    owner_rect.right - SETTINGS_WIDTH,
-                    owner_rect.top - SETTINGS_HEIGHT - 8,
-                )
+            let settings_width = SETTINGS_WIDTH_BASE;
+            let settings_height = SETTINGS_HEIGHT_BASE;
+            let (x, y) = if GetWindowRect(self.hwnd, &mut owner_rect).is_ok() {
+                let above = owner_rect.top - settings_height - 8;
+                let below = owner_rect.bottom + 8;
+                (owner_rect.left, if above >= 0 { above } else { below })
             } else {
                 (CW_USEDEFAULT, CW_USEDEFAULT)
             };
@@ -467,8 +480,8 @@ mod win {
                 WS_POPUP,
                 x,
                 y,
-                SETTINGS_WIDTH,
-                SETTINGS_HEIGHT,
+                settings_width,
+                settings_height,
                 None,
                 HMENU(null_mut()),
                 instance,
@@ -478,7 +491,7 @@ mod win {
                 Err(_) => return,
             };
             self.settings_hwnd = hwnd;
-            let rgn = CreateRoundRectRgn(0, 0, SETTINGS_WIDTH + 1, SETTINGS_HEIGHT + 1, 12, 12);
+            let rgn = CreateRoundRectRgn(0, 0, settings_width + 1, settings_height + 1, 12, 12);
             let _ = SetWindowRgn(hwnd, rgn, true);
             self.sync_settings_controls();
             let _ = ShowWindow(hwnd, SW_SHOWNOACTIVATE);
@@ -511,7 +524,6 @@ mod win {
                 IDC_CODEX_PREFIX,
                 &self.settings.codex_prefix,
             );
-            set_checkbox_checked(self.settings_hwnd, IDC_STARTUP, startup_enabled());
             self.suppress_settings_events = false;
         }
 
@@ -549,13 +561,6 @@ mod win {
                         }
                     }
                 }
-                IDC_COLOR_BUTTON if notify_code == BN_CLICKED => {
-                    self.open_color_dialog();
-                }
-                IDC_STARTUP if notify_code == BN_CLICKED => {
-                    let enabled = is_checkbox_checked(self.settings_hwnd, IDC_STARTUP);
-                    self.apply_startup_enabled(enabled);
-                }
                 IDC_EXIT if notify_code == BN_CLICKED => {
                     PostQuitMessage(0);
                 }
@@ -582,7 +587,6 @@ mod win {
 
         unsafe fn apply_startup_enabled(&mut self, enabled: bool) {
             if let Err(err) = set_startup_enabled(enabled) {
-                set_checkbox_checked(self.settings_hwnd, IDC_STARTUP, startup_enabled());
                 let text = wide(&format!("设置开机启动失败：{err}"));
                 let caption = wide("CC Balance");
                 let _ = MessageBoxW(
@@ -591,8 +595,6 @@ mod win {
                     PCWSTR(caption.as_ptr()),
                     Default::default(),
                 );
-            } else {
-                set_checkbox_checked(self.settings_hwnd, IDC_STARTUP, startup_enabled());
             }
         }
     }
@@ -664,29 +666,35 @@ mod win {
                     LRESULT(0)
                 }
                 WM_LBUTTONUP => {
-                    let x = loword(lparam.0 as usize) as i32;
-                    let y = hiword(lparam.0 as usize) as i32;
-                    if !ptr.is_null() && point_in_rect(x, y, &COLOR_ROW_RECT) {
+                    let x = loword(lparam.0 as usize) as i16 as i32;
+                    let y = hiword(lparam.0 as usize) as i16 as i32;
+                    if !ptr.is_null() && point_in_rect_base(x, y, &COLOR_ROW_RECT) {
                         (*ptr).open_color_dialog();
                         return LRESULT(0);
                     }
-                    if !ptr.is_null() && point_in_rect(x, y, &STARTUP_ROW_RECT) {
-                        let enabled = !is_checkbox_checked((*ptr).settings_hwnd, IDC_STARTUP);
-                        set_checkbox_checked((*ptr).settings_hwnd, IDC_STARTUP, enabled);
+                    if !ptr.is_null() && point_in_rect_base(x, y, &STARTUP_ROW_RECT) {
+                        let enabled = !startup_enabled();
                         (*ptr).apply_startup_enabled(enabled);
+                        let _ = RedrawWindow(
+                            hwnd,
+                            None,
+                            None,
+                            RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_ALLCHILDREN,
+                        );
                         return LRESULT(0);
                     }
-                    if point_in_rect(x, y, &EXIT_ROW_RECT) {
+                    if point_in_rect_base(x, y, &EXIT_ROW_RECT) {
                         PostQuitMessage(0);
                         return LRESULT(0);
                     }
                     DefWindowProcW(hwnd, msg, wparam, lparam)
                 }
-                WM_CTLCOLORSTATIC => {
+                WM_CTLCOLOREDIT | WM_CTLCOLORSTATIC => {
                     let hdc = windows::Win32::Graphics::Gdi::HDC(wparam.0 as *mut c_void);
                     SetBkMode(hdc, TRANSPARENT);
                     SetTextColor(hdc, COLORREF(0x00000000));
-                    LRESULT(GetStockObject(WHITE_BRUSH).0 as isize)
+                    let brush = CreateSolidBrush(COLORREF(0x00ffffff));
+                    LRESULT(brush.0 as isize)
                 }
                 WM_ERASEBKGND => LRESULT(1),
                 WM_PAINT => {
@@ -734,89 +742,39 @@ mod win {
     }
 
     unsafe fn create_settings_controls(hwnd: HWND) {
-        let font = system_ui_font();
-        create_label(hwnd, "字号", 24, 17, 70, 22, font);
-        let larger_font = system_ui_font_delta(-2);
-        let font_edit = create_edit(
+        let edit_font = settings_panel_font();
+        create_edit(
             hwnd,
             IDC_FONT_SIZE,
-            120,
-            15,
-            56,
-            24,
+            SETTINGS_VALUE_LEFT,
+            centered_control_top(0),
+            SETTINGS_VALUE_RIGHT - SETTINGS_VALUE_LEFT,
+            SETTINGS_CONTROL_HEIGHT,
             ES_NUMBER | ES_AUTOHSCROLL,
-            larger_font,
-        );
-        let _spin = CreateUpDownControl(
-            (WS_CHILD.0 | WS_VISIBLE.0) | UDS_ALIGNRIGHT | UDS_SETBUDDYINT | UDS_ARROWKEYS,
-            0,
-            0,
-            0,
-            0,
-            hwnd,
-            0,
-            GetModuleHandleW(None).unwrap_or_default(),
-            font_edit,
-            FONT_MAX,
-            FONT_MIN,
-            FONT_MIN,
+            edit_font,
         );
 
-        create_label(hwnd, "颜色", 24, 53, 70, 22, font);
-
-        create_label(hwnd, "Claude 前缀", 24, 89, 86, 22, font);
         create_edit(
             hwnd,
             IDC_CLAUDE_PREFIX,
-            120,
-            87,
-            66,
-            24,
+            SETTINGS_VALUE_LEFT,
+            centered_control_top(2),
+            SETTINGS_VALUE_RIGHT - SETTINGS_VALUE_LEFT,
+            SETTINGS_CONTROL_HEIGHT,
             ES_AUTOHSCROLL,
-            font,
+            edit_font,
         );
 
-        create_label(hwnd, "Codex 前缀", 24, 125, 86, 22, font);
         create_edit(
             hwnd,
             IDC_CODEX_PREFIX,
-            120,
-            123,
-            66,
-            24,
+            SETTINGS_VALUE_LEFT,
+            centered_control_top(3),
+            SETTINGS_VALUE_RIGHT - SETTINGS_VALUE_LEFT,
+            SETTINGS_CONTROL_HEIGHT,
             ES_AUTOHSCROLL,
-            font,
+            edit_font,
         );
-
-        create_checkbox(hwnd, IDC_STARTUP, "开机启动", 24, 153, 100, 24, font);
-    }
-
-    unsafe fn create_label(
-        hwnd: HWND,
-        text: &str,
-        x: i32,
-        y: i32,
-        width: i32,
-        height: i32,
-        font: windows::Win32::Graphics::Gdi::HFONT,
-    ) -> HWND {
-        let control = CreateWindowExW(
-            WINDOW_EX_STYLE(0),
-            w!("STATIC"),
-            PCWSTR(wide(text).as_ptr()),
-            WS_CHILD | WS_VISIBLE,
-            x,
-            y,
-            width,
-            height,
-            hwnd,
-            HMENU(null_mut()),
-            GetModuleHandleW(None).unwrap_or_default(),
-            None,
-        )
-        .unwrap_or_default();
-        set_control_font(control, font);
-        control
     }
 
     unsafe fn create_edit(
@@ -848,40 +806,19 @@ mod win {
         control
     }
 
-    unsafe fn create_checkbox(
-        hwnd: HWND,
-        id: i32,
-        text: &str,
-        x: i32,
-        y: i32,
-        width: i32,
-        height: i32,
-        font: windows::Win32::Graphics::Gdi::HFONT,
-    ) -> HWND {
-        let control = CreateWindowExW(
-            WINDOW_EX_STYLE(0),
-            w!("BUTTON"),
-            PCWSTR(wide(text).as_ptr()),
-            WS_CHILD | WS_VISIBLE | WS_TABSTOP | WINDOW_STYLE(BS_AUTOCHECKBOX as u32),
-            x,
-            y,
-            width,
-            height,
-            hwnd,
-            HMENU(id as *mut c_void),
-            GetModuleHandleW(None).unwrap_or_default(),
-            None,
-        )
-        .unwrap_or_default();
-        set_control_font(control, font);
-        control
+    fn row_top(row: i32) -> i32 {
+        row * SETTINGS_ROW_HEIGHT
     }
 
-    unsafe fn system_ui_font() -> windows::Win32::Graphics::Gdi::HFONT {
-        system_ui_font_delta(0)
+    fn row_bottom(row: i32) -> i32 {
+        row_top(row + 1)
     }
 
-    unsafe fn system_ui_font_delta(height_delta: i32) -> windows::Win32::Graphics::Gdi::HFONT {
+    fn centered_control_top(row: i32) -> i32 {
+        row_top(row) + (SETTINGS_ROW_HEIGHT - SETTINGS_CONTROL_HEIGHT) / 2
+    }
+
+    unsafe fn ui_font(base_height: i32) -> windows::Win32::Graphics::Gdi::HFONT {
         let mut metrics = NONCLIENTMETRICSW {
             cbSize: std::mem::size_of::<NONCLIENTMETRICSW>() as u32,
             ..Default::default()
@@ -895,11 +832,14 @@ mod win {
         .is_ok()
         {
             let mut font = metrics.lfMenuFont;
-            font.lfHeight += height_delta;
+            if base_height != 0 {
+                font.lfHeight = base_height;
+            }
+            font.lfWeight = FW_NORMAL.0 as i32;
             return CreateFontIndirectW(&font);
         }
         CreateFontW(
-            -15,
+            base_height,
             0,
             0,
             0,
@@ -914,6 +854,14 @@ mod win {
             (DEFAULT_PITCH.0 | FF_DONTCARE.0) as u32,
             PCWSTR::null(),
         )
+    }
+
+    unsafe fn settings_panel_font() -> windows::Win32::Graphics::Gdi::HFONT {
+        ui_font(0)
+    }
+
+    unsafe fn tooltip_font() -> windows::Win32::Graphics::Gdi::HFONT {
+        ui_font(-20)
     }
 
     unsafe fn set_control_font(hwnd: HWND, font: windows::Win32::Graphics::Gdi::HFONT) {
@@ -959,18 +907,12 @@ mod win {
     }
 
     unsafe fn refresh_settings_fonts(hwnd: HWND) {
-        let font = system_ui_font();
+        let font = settings_panel_font();
         let _ = EnumChildWindows(
             hwnd,
             Some(refresh_settings_child_font),
             LPARAM(font.0 as isize),
         );
-        let larger_font = system_ui_font_delta(-2);
-        if let Ok(control) =
-            windows::Win32::UI::WindowsAndMessaging::GetDlgItem(hwnd, IDC_FONT_SIZE)
-        {
-            set_control_font(control, larger_font);
-        }
     }
 
     extern "system" fn refresh_settings_child_font(hwnd: HWND, lparam: LPARAM) -> BOOL {
@@ -989,12 +931,12 @@ mod win {
         let rect = RECT {
             left: 0,
             top: 0,
-            right: SETTINGS_WIDTH,
-            bottom: SETTINGS_HEIGHT,
+            right: SETTINGS_WIDTH_BASE,
+            bottom: SETTINGS_HEIGHT_BASE,
         };
-        let white = CreateSolidBrush(COLORREF(0x00ffffff));
-        FillRect(hdc, &rect, HBRUSH(white.0));
-        let border = CreateSolidBrush(COLORREF(0x00d8d8d8));
+        let bg = CreateSolidBrush(COLORREF(0x00ffffff));
+        FillRect(hdc, &rect, HBRUSH(bg.0));
+        let border = CreateSolidBrush(COLORREF(0x00d0d0d0));
         FrameRect(hdc, &rect, HBRUSH(border.0));
 
         let old_pen = SelectObject(
@@ -1002,20 +944,86 @@ mod win {
             windows::Win32::Graphics::Gdi::CreatePen(
                 windows::Win32::Graphics::Gdi::PS_SOLID,
                 1,
-                COLORREF(0x00e6e6e6),
+                COLORREF(0x00e5e5e5),
             ),
         );
-        for y in [46, 82, 150, 170] {
+        for y in [row_top(1), row_top(2), row_top(3), row_top(4), row_top(5)] {
             let _ = MoveToEx(hdc, 0, y, None);
-            let _ = LineTo(hdc, SETTINGS_WIDTH, y);
+            let _ = LineTo(hdc, SETTINGS_WIDTH_BASE, y);
         }
+        paint_settings_text(hdc);
         paint_palette_swatch(hdc, HBRUSH(border.0));
-        paint_exit_row(hdc, HBRUSH(border.0));
+        paint_startup_row(hdc, HBRUSH(border.0));
+        paint_exit_row(hdc);
         let pen = SelectObject(hdc, old_pen);
         let _ = DeleteObject(pen);
-        let _ = DeleteObject(white);
+        let _ = DeleteObject(bg);
         let _ = DeleteObject(border);
         let _ = EndPaint(hwnd, &ps);
+    }
+
+    unsafe fn paint_settings_text(hdc: windows::Win32::Graphics::Gdi::HDC) {
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, COLORREF(0x00000000));
+        let font = settings_panel_font();
+        let old = SelectObject(hdc, font);
+        draw_panel_text(
+            hdc,
+            "字号",
+            SETTINGS_LABEL_LEFT,
+            row_top(0),
+            SETTINGS_VALUE_LEFT - 12,
+            row_bottom(0),
+        );
+        draw_panel_text(
+            hdc,
+            "颜色",
+            SETTINGS_LABEL_LEFT,
+            row_top(1),
+            SETTINGS_VALUE_LEFT - 12,
+            row_bottom(1),
+        );
+        draw_panel_text(
+            hdc,
+            "Claude 前缀",
+            SETTINGS_LABEL_LEFT,
+            row_top(2),
+            SETTINGS_VALUE_LEFT - 12,
+            row_bottom(2),
+        );
+        draw_panel_text(
+            hdc,
+            "Codex 前缀",
+            SETTINGS_LABEL_LEFT,
+            row_top(3),
+            SETTINGS_VALUE_LEFT - 12,
+            row_bottom(3),
+        );
+        SelectObject(hdc, old);
+        let _ = DeleteObject(font);
+    }
+
+    unsafe fn draw_panel_text(
+        hdc: windows::Win32::Graphics::Gdi::HDC,
+        text: &str,
+        left: i32,
+        top: i32,
+        right: i32,
+        bottom: i32,
+    ) {
+        let mut rect = RECT {
+            left,
+            top,
+            right,
+            bottom,
+        };
+        let mut text = wide(text);
+        DrawTextW(
+            hdc,
+            &mut text,
+            &mut rect,
+            DT_LEFT | DT_VCENTER | DT_SINGLELINE,
+        );
     }
 
     unsafe fn paint_palette_swatch(hdc: windows::Win32::Graphics::Gdi::HDC, border: HBRUSH) {
@@ -1058,17 +1066,64 @@ mod win {
         FrameRect(hdc, &swatch_rect, border);
     }
 
-    unsafe fn paint_exit_row(hdc: windows::Win32::Graphics::Gdi::HDC, _border: HBRUSH) {
-        let bg = CreateSolidBrush(COLORREF(0x00ffffff));
-        FillRect(hdc, &EXIT_ROW_RECT, HBRUSH(bg.0));
-        let _ = DeleteObject(bg);
-
+    unsafe fn paint_startup_row(hdc: windows::Win32::Graphics::Gdi::HDC, border: HBRUSH) {
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, COLORREF(0x00000000));
-        let font = system_ui_font();
+        let font = settings_panel_font();
+        let old = SelectObject(hdc, font);
+
+        let box_rect = RECT {
+            left: SETTINGS_VALUE_LEFT,
+            top: STARTUP_ROW_RECT.top + 10,
+            right: SETTINGS_VALUE_LEFT + 20,
+            bottom: STARTUP_ROW_RECT.top + 30,
+        };
+        if startup_enabled() {
+            let fill = CreateSolidBrush(COLORREF(0x00d77800));
+            FillRect(hdc, &box_rect, HBRUSH(fill.0));
+            let _ = DeleteObject(fill);
+            SetTextColor(hdc, COLORREF(0x00ffffff));
+            let check_font = ui_font(-18);
+            let old_check = SelectObject(hdc, check_font);
+            let mut check_rect = box_rect;
+            let mut check = wide("✓");
+            DrawTextW(
+                hdc,
+                &mut check,
+                &mut check_rect,
+                DT_LEFT | DT_VCENTER | DT_SINGLELINE,
+            );
+            SelectObject(hdc, old_check);
+            let _ = DeleteObject(check_font);
+            SetTextColor(hdc, COLORREF(0x00000000));
+        } else {
+            FrameRect(hdc, &box_rect, border);
+        }
+
+        let mut text_rect = RECT {
+            left: SETTINGS_LABEL_LEFT,
+            top: STARTUP_ROW_RECT.top,
+            right: SETTINGS_VALUE_LEFT - 12,
+            bottom: STARTUP_ROW_RECT.bottom,
+        };
+        let mut text = wide("开机启动");
+        DrawTextW(
+            hdc,
+            &mut text,
+            &mut text_rect,
+            DT_LEFT | DT_VCENTER | DT_SINGLELINE,
+        );
+        SelectObject(hdc, old);
+        let _ = DeleteObject(font);
+    }
+
+    unsafe fn paint_exit_row(hdc: windows::Win32::Graphics::Gdi::HDC) {
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, COLORREF(0x00000000));
+        let font = settings_panel_font();
         let old = SelectObject(hdc, font);
         let mut text_rect = RECT {
-            left: 24,
+            left: SETTINGS_LABEL_LEFT,
             top: EXIT_ROW_RECT.top,
             right: EXIT_ROW_RECT.right - 24,
             bottom: EXIT_ROW_RECT.bottom,
@@ -1081,6 +1136,7 @@ mod win {
             DT_LEFT | DT_VCENTER | DT_SINGLELINE,
         );
         SelectObject(hdc, old);
+        let _ = DeleteObject(font);
     }
 
     extern "system" fn tooltip_proc(
@@ -1114,29 +1170,13 @@ mod win {
         let _ = DeleteObject(brush);
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, COLORREF(0x00ffffff));
-        let font_name = wide("Segoe UI");
-        let font = CreateFontW(
-            -13,
-            0,
-            0,
-            0,
-            FW_NORMAL.0 as i32,
-            0,
-            0,
-            0,
-            DEFAULT_CHARSET.0 as u32,
-            OUT_DEFAULT_PRECIS.0 as u32,
-            CLIP_DEFAULT_PRECIS.0 as u32,
-            ANTIALIASED_QUALITY.0 as u32,
-            (DEFAULT_PITCH.0 | FF_DONTCARE.0) as u32,
-            PCWSTR(font_name.as_ptr()),
-        );
+        let font = tooltip_font();
         let old = SelectObject(hdc, font);
         let mut text_rect = RECT {
-            left: 10,
-            top: 8,
-            right: TOOLTIP_WIDTH - 10,
-            bottom: TOOLTIP_HEIGHT - 8,
+            left: 12,
+            top: 10,
+            right: TOOLTIP_WIDTH - 12,
+            bottom: TOOLTIP_HEIGHT - 10,
         };
         let mut title = [0u16; 256];
         let len = windows::Win32::UI::WindowsAndMessaging::GetWindowTextW(hwnd, &mut title);
@@ -1156,12 +1196,16 @@ mod win {
         if hdc.is_invalid() {
             return;
         }
+        let font = overlay_text_font(settings.font_size);
+        let old_font = SelectObject(hdc, font);
+        let layout = overlay_layout(hdc, text);
+
         let mut bits: *mut c_void = null_mut();
         let bitmap_info = BITMAPINFO {
             bmiHeader: BITMAPINFOHEADER {
                 biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
-                biWidth: WINDOW_WIDTH,
-                biHeight: -WINDOW_HEIGHT,
+                biWidth: layout.width,
+                biHeight: -layout.height,
                 biPlanes: 1,
                 biBitCount: 32,
                 biCompression: BI_RGB.0,
@@ -1179,12 +1223,16 @@ mod win {
         ) {
             Ok(bitmap) => bitmap,
             Err(_) => {
+                SelectObject(hdc, old_font);
+                let _ = DeleteObject(font);
                 let _ = DeleteDC(hdc);
                 return;
             }
         };
         if bitmap.is_invalid() || bits.is_null() {
             let _ = DeleteObject(bitmap);
+            SelectObject(hdc, old_font);
+            let _ = DeleteObject(font);
             let _ = DeleteDC(hdc);
             return;
         }
@@ -1192,7 +1240,7 @@ mod win {
         let old_bitmap = SelectObject(hdc, bitmap);
         let pixels = std::slice::from_raw_parts_mut(
             bits as *mut u8,
-            (WINDOW_WIDTH * WINDOW_HEIGHT * 4) as usize,
+            (layout.width * layout.height * 4) as usize,
         );
         pixels.fill(0);
         for pixel in pixels.chunks_exact_mut(4) {
@@ -1201,10 +1249,13 @@ mod win {
 
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, COLORREF(0x00ffffff));
-        let font = overlay_text_font(settings.font_size);
-        let old_font = SelectObject(hdc, font);
         for (index, line) in text.lines().take(2).enumerate() {
-            draw_overlay_line(hdc, line, FIRST_LINE_TOP + index as i32 * LINE_HEIGHT);
+            draw_overlay_line(
+                hdc,
+                line,
+                layout.first_line_top + index as i32 * layout.line_height,
+                layout,
+            );
         }
 
         let text_color = settings.text_color_bgr();
@@ -1230,8 +1281,8 @@ mod win {
             y: hwnd_rect.top,
         };
         let size = SIZE {
-            cx: WINDOW_WIDTH,
-            cy: WINDOW_HEIGHT,
+            cx: layout.width,
+            cy: layout.height,
         };
         let src_point = POINT { x: 0, y: 0 };
         let blend = BLENDFUNCTION {
@@ -1292,15 +1343,6 @@ mod win {
         }
     }
 
-    fn taskbar_auto_hide() -> bool {
-        let mut data = APPBARDATA {
-            cbSize: std::mem::size_of::<APPBARDATA>() as u32,
-            ..Default::default()
-        };
-        let state = unsafe { SHAppBarMessage(ABM_GETSTATE, &mut data) };
-        state & ABS_AUTOHIDE as usize != 0
-    }
-
     fn wide(value: &str) -> Vec<u16> {
         value.encode_utf16().chain(std::iter::once(0)).collect()
     }
@@ -1313,8 +1355,18 @@ mod win {
         ((value >> 16) & 0xffff) as u16
     }
 
-    fn point_in_rect(x: i32, y: i32, rect: &RECT) -> bool {
+    fn point_in_rect_base(x: i32, y: i32, rect: &RECT) -> bool {
         x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom
+    }
+
+    fn overlay_position(taskbar: RECT, tray: Option<RECT>, window: RECT) -> (i32, i32) {
+        let anchor_left = tray.map(|rect| rect.left).unwrap_or(taskbar.right - 590);
+        let window_width = (window.right - window.left).max(WINDOW_WIDTH);
+        let window_height = (window.bottom - window.top).max(WINDOW_HEIGHT);
+        let x = anchor_left - window_width - TRAY_GAP;
+        let taskbar_height = taskbar.bottom - taskbar.top;
+        let y = taskbar.top + (taskbar_height - window_height).max(0) / 2;
+        (x, y)
     }
 
     unsafe fn set_control_text(parent: HWND, id: i32, value: &str) {
@@ -1329,20 +1381,6 @@ mod win {
         let mut buffer = [0u16; 128];
         let len = GetWindowTextW(control, &mut buffer);
         Some(String::from_utf16_lossy(&buffer[..len as usize]))
-    }
-
-    unsafe fn set_checkbox_checked(parent: HWND, id: i32, checked: bool) {
-        if let Ok(control) = windows::Win32::UI::WindowsAndMessaging::GetDlgItem(parent, id) {
-            let state = if checked { 1 } else { 0 };
-            let _ = SendMessageW(control, BM_SETCHECK, WPARAM(state), LPARAM(0));
-        }
-    }
-
-    unsafe fn is_checkbox_checked(parent: HWND, id: i32) -> bool {
-        let Ok(control) = windows::Win32::UI::WindowsAndMessaging::GetDlgItem(parent, id) else {
-            return false;
-        };
-        SendMessageW(control, BM_GETCHECK, WPARAM(0), LPARAM(0)).0 == 1
     }
 
     fn startup_enabled() -> bool {
@@ -1549,26 +1587,63 @@ mod win {
         }
     }
 
-    unsafe fn draw_overlay_line(hdc: windows::Win32::Graphics::Gdi::HDC, line: &str, top: i32) {
-        let (label, value) = line.split_once(' ').unwrap_or((line, ""));
-        let mut label_size = SIZE::default();
-        let label_wide = wide(label);
-        let label_text_slice = &label_wide[..label_wide.len().saturating_sub(1)];
-        if !label_text_slice.is_empty() {
-            let _ = GetTextExtentPoint32W(hdc, label_text_slice, &mut label_size);
+    unsafe fn overlay_layout(hdc: windows::Win32::Graphics::Gdi::HDC, text: &str) -> OverlayLayout {
+        let mut metrics = TEXTMETRICW::default();
+        let _ = GetTextMetricsW(hdc, &mut metrics);
+        let line_height = (metrics.tmHeight + metrics.tmExternalLeading).max(18);
+
+        let mut label_width = 0;
+        let mut value_width = 0;
+        for line in text.lines().take(2) {
+            let (label, value) = line.split_once(' ').unwrap_or((line, ""));
+            label_width = label_width.max(text_width(hdc, label));
+            value_width = value_width.max(text_width(hdc, value));
         }
-        let value_left = (LABEL_LEFT + label_size.cx + PREFIX_VALUE_GAP).min(VALUE_RIGHT - 20);
+
+        let value_left = LABEL_LEFT + label_width + PREFIX_VALUE_GAP;
+        let value_right = value_left + value_width;
+        let width = (value_right + OVERLAY_PADDING_X).max(WINDOW_WIDTH);
+        let height = (OVERLAY_PADDING_Y * 2 + line_height * 2).max(WINDOW_HEIGHT);
+
+        OverlayLayout {
+            width,
+            height,
+            line_height,
+            first_line_top: OVERLAY_PADDING_Y,
+            value_left,
+            value_right,
+        }
+    }
+
+    unsafe fn text_width(hdc: windows::Win32::Graphics::Gdi::HDC, value: &str) -> i32 {
+        let mut size = SIZE::default();
+        let wide_text = wide(value);
+        let text_slice = &wide_text[..wide_text.len().saturating_sub(1)];
+        if !text_slice.is_empty() {
+            let _ = GetTextExtentPoint32W(hdc, text_slice, &mut size);
+        }
+        size.cx
+    }
+
+    unsafe fn draw_overlay_line(
+        hdc: windows::Win32::Graphics::Gdi::HDC,
+        line: &str,
+        top: i32,
+        layout: OverlayLayout,
+    ) {
+        let (label, value) = line.split_once(' ').unwrap_or((line, ""));
+        let label_wide = wide(label);
         let mut label_rect = RECT {
             left: LABEL_LEFT,
             top,
-            right: value_left - PREFIX_VALUE_GAP + 1,
-            bottom: top + LINE_HEIGHT,
+            right: layout.value_left - PREFIX_VALUE_GAP + 1,
+            bottom: top + layout.line_height,
         };
         let mut value_rect = RECT {
-            left: value_left,
+            left: layout.value_left,
             top,
-            right: VALUE_RIGHT,
-            bottom: top + LINE_HEIGHT,
+            right: layout.value_right,
+            bottom: top + layout.line_height,
         };
         let mut label_text = label_wide;
         let mut value_text = wide(value);
@@ -1582,7 +1657,7 @@ mod win {
             hdc,
             &mut value_text,
             &mut value_rect,
-            DT_RIGHT | DT_SINGLELINE | DT_NOCLIP,
+            DT_LEFT | DT_SINGLELINE | DT_NOCLIP,
         );
     }
 
@@ -1607,6 +1682,90 @@ mod win {
             assert_eq!(premultiply_channel(255, 128), 128);
             assert_eq!(premultiply_channel(64, 128), 32);
             assert_eq!(premultiply_channel(0, 200), 0);
+        }
+
+        #[test]
+        fn positions_overlay_vertically_centered_in_bottom_taskbar() {
+            let taskbar = RECT {
+                left: 0,
+                top: 996,
+                right: 1920,
+                bottom: 1080,
+            };
+            let tray = RECT {
+                left: 1520,
+                top: 996,
+                right: 1920,
+                bottom: 1080,
+            };
+            let window = RECT {
+                left: 0,
+                top: 0,
+                right: WINDOW_WIDTH,
+                bottom: WINDOW_HEIGHT,
+            };
+
+            assert_eq!(
+                overlay_position(taskbar, Some(tray), window),
+                (
+                    1520 - WINDOW_WIDTH - TRAY_GAP,
+                    996 + (84 - WINDOW_HEIGHT) / 2
+                )
+            );
+        }
+
+        #[test]
+        fn positions_overlay_using_actual_scaled_window_size() {
+            let taskbar = RECT {
+                left: 0,
+                top: 1704,
+                right: 2880,
+                bottom: 1800,
+            };
+            let tray = RECT {
+                left: 2160,
+                top: 1704,
+                right: 2880,
+                bottom: 1800,
+            };
+            let scaled_window = RECT {
+                left: 2066,
+                top: 1748,
+                right: 2158,
+                bottom: 1790,
+            };
+
+            assert_eq!(
+                overlay_position(taskbar, Some(tray), scaled_window),
+                (2160 - 92 - TRAY_GAP, 1704 + (96 - 42) / 2)
+            );
+        }
+
+        #[test]
+        fn positions_overlay_using_dynamic_window_width() {
+            let taskbar = RECT {
+                left: 0,
+                top: 1704,
+                right: 2880,
+                bottom: 1800,
+            };
+            let tray = RECT {
+                left: 2160,
+                top: 1704,
+                right: 2880,
+                bottom: 1800,
+            };
+            let wide_window = RECT {
+                left: 2010,
+                top: 1730,
+                right: 2158,
+                bottom: 1774,
+            };
+
+            assert_eq!(
+                overlay_position(taskbar, Some(tray), wide_window),
+                (2160 - 148 - TRAY_GAP, 1704 + (96 - 44) / 2)
+            );
         }
 
         #[test]

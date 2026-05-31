@@ -47,7 +47,7 @@ CC Balance Overlay turns that hidden state into something glanceable. It is inte
 
 1. Install and configure CC Switch.
 2. Make sure your Claude and Codex providers in CC Switch include usable `usage_script` balance metadata.
-3. Download `cc-balance-overlay-v1.0.0-windows-x64.zip` from the [latest release](https://github.com/wgd-12138/cc-balance-overlay/releases/latest).
+3. Download `cc-balance-overlay-v1.0.1-windows-x64.zip` from the [latest release](https://github.com/wgd-12138/cc-balance-overlay/releases/latest).
 4. Extract the zip to a stable folder, for example `C:\Tools\cc-balance-overlay`.
 5. Run `cc-balance-overlay.exe`.
 6. Look near the Windows tray area. You should see two compact balance lines:

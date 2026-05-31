@@ -39,6 +39,7 @@ CC Balance Overlay turns that hidden state into something glanceable. It is inte
 - **Clock-like layout**: low-distraction presentation inspired by the native Windows time/date block.
 - **Provider tooltip**: hover to see the current Claude and Codex provider names.
 - **Right-click settings**: font size, text color, Claude prefix, Codex prefix, startup toggle, and quit.
+- **Fullscreen auto-hide**: hides while a foreground movie or game covers the monitor, then restores after fullscreen exits.
 - **Startup update check**: checks the latest GitHub Release on launch and stays silent when there is no update.
 - **Local-first**: settings stay on your machine.
 - **Native Rust + Win32**: lightweight app with no console window on launch.
@@ -80,6 +81,10 @@ If a balance cannot be loaded yet, the app shows `--` for that line and keeps ru
 ### Hover For Provider Names
 
 Move your mouse over the overlay to see which CC Switch providers are currently active for Claude and Codex. This is useful when you switch providers often and want to confirm which relay is being charged.
+
+### Fullscreen Movies And Games
+
+When another foreground window covers the whole monitor, the overlay hides itself and closes any open hover/settings popup. It restores automatically after you leave fullscreen.
 
 ### Open Settings
 
@@ -181,6 +186,13 @@ It uses:
 - `usage_script` metadata from the provider table
 
 Then it calls the configured provider balance endpoint and renders the result as a compact taskbar-side overlay.
+
+For fullscreen behavior, the app checks the foreground window position with Win32 APIs and hides the overlay when that window covers its monitor.
+
+## Search Notes
+
+- `skills.sh`: no directly reusable Windows taskbar/tray overlay recipe was found for this project.
+- GitHub / Win32 references: existing examples commonly detect fullscreen by comparing the foreground window rectangle with the monitor rectangle. This project follows that simple mechanism with `GetForegroundWindow`, `GetWindowRect`, `MonitorFromWindow`, and `GetMonitorInfoW`.
 
 ## Troubleshooting
 

